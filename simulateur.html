@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Compagnon du cours « Comment savoir si une politique marche ? » : simulations manipulables des méthodes d'inférence causale, fil rouge Casques bleus.">
+<title>Simulateur du contrefactuel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a field-lab notebook. Text column (what to compare, why, what could mislead) beside a live bench (chart, controls, readouts). One method per tab, in the order of the lecture. */
+:root{
+  --bg:#EEF2F5; --panel:#FFFFFF; --ink:#14202A; --muted:#566573; --line:#CFD8DF; --grid:#E3E9EE;
+  --t:#0072B2; --t-soft:rgba(0,114,178,.14);
+  --c:#C98A00; --c-soft:rgba(230,159,0,.28); --c-ink:#9A6700;
+  --eff:#009E73; --eff-ink:#007A59; --warn:#D55E00; --warn-soft:rgba(213,94,0,.12); --hid:#CC79A7; --hid-ink:#A3507E;
+  --disp:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F161C; --panel:#172129; --ink:#E4ECF2; --muted:#9BABB8; --line:#2B3945; --grid:#212E38;
+  --t:#56B4E9; --t-soft:rgba(86,180,233,.16); --c:#E69F00; --c-soft:rgba(230,159,0,.25); --c-ink:#F2B83C;
+  --eff:#2BB98E; --eff-ink:#45CFA3; --warn:#EE7A35; --warn-soft:rgba(238,122,53,.14); --hid:#E08CBB; --hid-ink:#EBA3CB; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F161C; --panel:#172129; --ink:#E4ECF2; --muted:#9BABB8; --line:#2B3945; --grid:#212E38;
+  --t:#56B4E9; --t-soft:rgba(86,180,233,.16); --c:#E69F00; --c-soft:rgba(230,159,0,.25); --c-ink:#F2B83C;
+  --eff:#2BB98E; --eff-ink:#45CFA3; --warn:#EE7A35; --warn-soft:rgba(238,122,53,.14); --hid:#E08CBB; --hid-ink:#EBA3CB; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 var(--body);margin:0}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:20px;padding-block:0 56px}
+h1,h2,h3{font-family:var(--disp);text-wrap:balance;margin:0}
+p{margin:0}
+a{color:var(--t)}
+button,input{font:inherit}
+:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+
+/* hero */
+.hero{padding-block:40px 26px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:36px;align-items:end}
+.eyebrow{font:500 12px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hero h1{font-weight:800;font-stretch:72%;font-size:clamp(2.4rem,6vw,4.4rem);line-height:.95;letter-spacing:-.01em;text-transform:uppercase;margin-top:10px}
+.hero .lede{margin-top:14px;max-width:58ch;color:var(--ink)}
+.formula{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:18px 20px;display:grid;gap:10px}
+.formula .eq{font:600 clamp(1.05rem,2.2vw,1.35rem)/1.3 var(--mono)}
+.formula .eq .cf{border-bottom:2px dashed var(--t);color:var(--t)}
+.formula .eq .ef{color:var(--eff-ink)}
+.switch{font:600 13px var(--disp);letter-spacing:.02em}
+.switch:empty{display:none}
+.formula small{font-size:.92rem;color:var(--muted);line-height:1.45}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin}
+.tabs button{border:0;background:none;color:var(--muted);padding:12px 12px 10px;cursor:pointer;white-space:nowrap;font:600 14px var(--disp);font-stretch:88%;border-bottom:3px solid transparent;display:flex;gap:7px;align-items:baseline}
+.tabs button .n{font:500 12px var(--mono)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--t)}
+.tabs button:hover{color:var(--ink)}
+
+/* panels */
+.panel{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:34px;padding-top:28px}
+.panel[hidden]{display:none!important}
+.text{display:grid;gap:18px;align-content:start;min-width:0}
+.text h2{font-weight:750;font-stretch:80%;font-size:clamp(1.7rem,3vw,2.3rem);line-height:1.05}
+.text h2 .k{font:500 .5em var(--mono);color:var(--muted);display:block;letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
+.text .q{font-style:italic;color:var(--muted)}
+dl.sheet{margin:0;display:grid;gap:12px}
+dl.sheet dt{font:600 11.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+dl.sheet dd{margin:2px 0 0}
+dl.sheet .trap dt{color:var(--warn)}
+.steps{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.steps li::marker{font:600 .85em var(--mono);color:var(--t)}
+.h3{font:700 13px var(--disp);letter-spacing:.07em;text-transform:uppercase;font-stretch:90%}
+details.defi{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--panel)}
+details.defi summary{cursor:pointer;font:700 14px var(--disp);letter-spacing:.04em}
+details.defi p{margin-top:8px}
+.course{font-size:.94rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+
+/* lab bench */
+.lab{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:14px;align-content:start;min-width:0}
+.labhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline}
+.labhead .h3{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--ink)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{flex:none}
+.chartbox{min-width:0}
+svg.chart{width:100%;height:auto;display:block}
+.controls{display:grid;gap:10px}
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center}
+.ctl label{font-size:15px}
+.ctl output{font:500 13px var(--mono);color:var(--ink);text-align:right;min-width:6ch}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--t)}
+.ctl .hint{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:7px 12px;cursor:pointer;font:600 13.5px var(--disp);letter-spacing:.02em}
+.btn:hover{border-color:var(--muted)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.btn.primary{background:var(--t);border-color:var(--t);color:#fff}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:4px;overflow:hidden;width:fit-content;max-width:100%}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;cursor:pointer;font:600 13px var(--disp)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.chk{display:flex;gap:8px;align-items:center;font-size:15px}
+.chk input{accent-color:var(--t);width:17px;height:17px}
+
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 16px}
+.ro{border-top:3px solid var(--line);padding-top:6px;min-width:0}
+.ro .k{font:600 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.ro .v{font:600 1.55rem/1.2 var(--mono);font-variant-numeric:tabular-nums}
+.ro .note{font-size:13px;color:var(--muted)}
+.ro.est{border-top-color:var(--t)}
+.ro.true{border-top-color:var(--eff)} .ro.true .k::before{content:"\2713\00a0"} .ro.true .v{color:var(--eff-ink)}
+.ro.bias{border-top-color:var(--warn)} .ro.bias .k::before{content:"\25B2\00a0"} .ro.bias.big .v{color:var(--warn)}
+.ro.raw{border-top-style:dashed}
+.eqline{font:500 14px var(--mono);color:var(--muted);background:var(--bg);border-radius:4px;padding:8px 10px;overflow-x:auto}
+.verdict{font-size:15px;padding:8px 12px;border-radius:4px;background:var(--bg)}
+.verdict b{font-family:var(--disp)}
+.weights{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 16px}
+
+/* svg */
+.grid{stroke:var(--grid);stroke-width:1}
+.zero{stroke:var(--muted);stroke-width:1}
+.base{stroke:var(--muted);stroke-width:1}
+.tick{fill:var(--muted);font:11.5px var(--mono)}
+.alab{fill:var(--ink);font:600 13px var(--disp)}
+.lbl{fill:var(--ink);font:13px var(--body)}
+.lbl-m{fill:var(--muted);font:12.5px var(--body)}
+.lbl-b{fill:var(--ink);font:700 12.5px var(--disp);letter-spacing:.03em}
+.num{fill:var(--ink);font:600 14px var(--mono)}
+.num-eff{fill:var(--eff-ink);font:700 14px var(--mono)}
+.num-warn{fill:var(--warn);font:700 13px var(--mono)}
+.num-t{fill:var(--t);font:600 13px var(--mono)}
+.halo{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+.mk-t{fill:var(--t);stroke:var(--panel);stroke-width:.8}
+.mk-c{fill:var(--c-soft);stroke:var(--c);stroke-width:1.6}
+.mk-cf{fill:none;stroke:var(--t);stroke-width:1.4;stroke-dasharray:2 2}
+.mk-big-t{fill:var(--t);stroke:var(--panel);stroke-width:2}
+.mk-big-c{fill:var(--c);stroke:var(--panel);stroke-width:2}
+.dim{opacity:.28}
+.mean{stroke:var(--ink);stroke-width:3}
+.mean-cf{stroke:var(--t);stroke-width:2.5;stroke-dasharray:6 4}
+.guide{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
+.cf-link{stroke:var(--t);stroke-width:1;opacity:.45}
+.arr-ink{stroke:var(--ink);stroke-width:1.6}
+.arr-eff{stroke:var(--eff);stroke-width:2.6}
+.arr-warn{stroke:var(--warn);stroke-width:2}
+.ln-t{stroke:var(--t);stroke-width:2.6;fill:none}
+.ln-c{stroke:var(--c);stroke-width:2.6;fill:none;stroke-dasharray:8 5}
+.ln-cf{stroke:var(--t);stroke-width:2;fill:none;stroke-dasharray:3 4}
+.ln-warn{stroke:var(--warn);stroke-width:2;fill:none;stroke-dasharray:9 4 2 4}
+.ln-pool{stroke:var(--muted);stroke-width:1;fill:none;opacity:.45}
+.ln-zero{stroke:var(--muted);stroke-width:1}
+.match{stroke:var(--muted);stroke-width:1.2}
+.cal{fill:var(--hid);fill-opacity:.035;stroke:var(--hid);stroke-width:1;stroke-dasharray:3 3}
+.ring-warn{fill:none;stroke:var(--warn);stroke-width:1.8;stroke-dasharray:3 2}
+.band{fill:var(--t-soft)}
+.band-p{fill:var(--warn-soft)}
+.cut{stroke:var(--ink);stroke-width:1.3;stroke-dasharray:5 4}
+.bar{fill:var(--muted);opacity:.5}
+.bar-on{fill:var(--t);opacity:.75}
+.bar-t{fill:var(--t);opacity:.7}
+.bar-w{fill:url(#hatch-w);stroke:var(--warn);stroke-width:1}
+.cell{fill:var(--ink)}
+.ah-eff{fill:var(--eff)} .ah-ink{fill:var(--ink)} .ah-warn{fill:var(--warn)}
+.hatch-ln{stroke:var(--warn);stroke-width:2} .hatch-bg{fill:var(--warn-soft)}
+.pt{transition:transform .75s cubic-bezier(.3,.7,.2,1)}
+@media (prefers-reduced-motion: reduce){.pt{transition:none}}
+
+/* quiz */
+.quiz{display:grid;gap:18px}
+.qitem{border-top:1px solid var(--line);padding-top:14px;display:grid;gap:10px}
+.qitem .qq{font-weight:600}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopts button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:6px 10px;cursor:pointer;font:600 13px var(--disp)}
+.qopts button.ok{background:var(--eff);border-color:var(--eff);color:#fff}
+.qopts button.ok::before{content:"\2713\00a0"}
+.qopts button.no{border-color:var(--warn);color:var(--warn);text-decoration:line-through}
+.qfb{font-size:15px}
+.score{font:600 14px var(--mono)}
+
+/* course deck */
+.deck{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.stage{width:100%}
+.deckhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.deckhead .h3{color:var(--muted)}
+.deckhead .count{font:500 13px var(--mono);color:var(--muted)}
+.stage{position:relative;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;aspect-ratio:16/9;max-width:100%;outline:none}
+.stage:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+.stage img{display:block;width:100%;height:100%;object-fit:contain;background:#fff}
+.stage .hit{position:absolute;top:0;bottom:0;width:30%;border:0;background:transparent;cursor:pointer}
+.stage .hit.prev{left:0}.stage .hit.next{right:0}
+.stage .hit:hover{background:linear-gradient(90deg,rgba(0,0,0,.05),transparent)}
+.stage .hit.next:hover{background:linear-gradient(270deg,rgba(0,0,0,.05),transparent)}
+.stage:fullscreen{border:0;border-radius:0;background:#000}
+.deckbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.strip{display:flex;gap:6px;overflow-x:auto;padding-block:4px;flex:1 1 260px;min-width:0;scrollbar-width:thin}
+.strip button{flex:none;width:76px;aspect-ratio:16/9;padding:0;border:2px solid var(--line);border-radius:3px;background:#fff;cursor:pointer;overflow:hidden}
+.strip button img{width:100%;height:100%;object-fit:cover;display:block}
+.strip button[aria-current="true"]{border-color:var(--t);box-shadow:0 0 0 1px var(--t)}
+.btn:disabled{opacity:.4;cursor:default}
+@media (max-width:640px){.deckbar .strip{order:5;flex-basis:100%}}
+.reserve{font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--hid-ink)}
+details.transcript{font-size:14px;color:var(--muted)}
+details.transcript summary{cursor:pointer;font:600 13px var(--disp)}
+details.transcript p{margin-top:6px;max-width:90ch}
+.tolab{justify-self:start}
+.chapnav{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
+.chapnav button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;padding:10px 14px;cursor:pointer;font:600 14px var(--disp);text-align:left}
+.chapnav button small{display:block;font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chapnav button:hover{border-color:var(--muted)}
+.chapnav .nx{margin-left:auto;text-align:right}
+.tabs button.seen .n::after{content:"\2713";margin-left:3px;color:var(--eff-ink)}
+.solo{grid-column:1/-1;max-width:70ch;display:grid;gap:10px}
+
+/* predict */
+.predict{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:12px 14px;display:grid;gap:8px}
+.predict .pq{font-weight:600}
+.predict .popts{display:flex;flex-wrap:wrap;gap:6px}
+.predict .popts button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:6px 10px;cursor:pointer;font:600 13.5px var(--disp);text-align:left}
+.predict .popts button.ok{background:var(--eff);border-color:var(--eff);color:#fff}
+.predict .popts button.ok::before{content:"\2713\00a0"}
+.predict .popts button.no{border-color:var(--warn);color:var(--warn);text-decoration:line-through}
+.predict .pfb{font-size:15px}
+/* triangulation */
+.tri-cap{font-size:13.5px;color:var(--muted)}
+.mk-ko{fill:var(--panel);stroke:var(--warn);stroke-width:2}
+.ci-ok{stroke:var(--t);stroke-width:3;stroke-linecap:round}
+.ci-ko{stroke:var(--warn);stroke-width:2.4;stroke-dasharray:6 4}
+.ref1{stroke:var(--eff);stroke-width:2}
+.ref0{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3}
+.rowname{fill:var(--ink);font:700 13px var(--disp)}
+.rowko{fill:var(--warn);font:12.5px var(--body)}
+/* projection mode */
+.projbtn{justify-self:start}
+.mk-raw{fill:var(--ink);stroke:var(--panel);stroke-width:1}
+.ci-raw{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+html.proj body{font-size:20px}
+html.proj .wrap{max-width:1560px}
+html.proj .tick{font-size:15px} html.proj .alab{font-size:16px} html.proj .lbl-b,html.proj .rowname{font-size:15.5px}
+html.proj .num,html.proj .num-eff,html.proj .num-warn,html.proj .num-t{font-size:17px} html.proj .lbl,html.proj .lbl-m,html.proj .rowko{font-size:15px}
+html.proj .ro .v{font-size:2.1rem} html.proj .ro .k{font-size:13px} html.proj .ctl label{font-size:18px}
+html.proj .btn,html.proj .seg button{font-size:16px;padding:9px 14px}
+
+footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-size:14px;color:var(--muted);display:grid;gap:6px;max-width:90ch}
+
+@media (max-width:980px){.panel{grid-template-columns:minmax(0,1fr)}.hero{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){body{font-size:16px}.lab{padding:12px}.ro .v{font-size:1.3rem}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<marker id="ah-eff" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-eff"/></marker>
+<marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-ink"/></marker>
+<marker id="ah-warn" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-warn"/></marker>
+<pattern id="hatch-w" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="6" class="hatch-ln"/></pattern>
+</defs></svg>
+
+<div class="wrap">
+<header class="hero">
+  <div>
+    <div class="eyebrow">Compagnon du cours «&nbsp;Comment savoir si une politique marche&nbsp;?&nbsp;» · SKEMA Centre for Global Risks</div>
+    <h1>Simulateur du contrefactuel</h1>
+    <p class="lede">Sept façons de construire le «&nbsp;monde sans mission&nbsp;», à manipuler soi-même. Chaque onglet reprend une méthode du cours&nbsp;: bougez les curseurs, regardez l'estimation changer, cherchez ce qui la rend juste et ce qui la rend trompeuse.</p>
+  </div>
+  <div class="formula">
+    <div class="eq"><span class="ef">effet</span> = réel − <span class="cf">contrefactuel</span></div>
+    <button class="btn projbtn" id="projb" aria-pressed="false" title="Agrandit les textes et les graphiques pour un vidéoprojecteur">Mode projection (vidéoprojecteur)</button>
+    <a class="switch" id="switchv" href="index.html">Version cours complet, avec les diapositives →</a>
+    <small>Toutes les simulations de ce site utilisent des données <b>fictives</b>. On y connaît donc le vrai effet, et même le contrefactuel de chaque pays&nbsp;: c'est le seul endroit où l'on voit les deux mondes à la fois. Dans la réalité, il faut toujours le construire.</small>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Méthodes">
+  <button role="tab" data-tab="piege"><span class="n">0</span>Le piège</button>
+  <button role="tab" data-tab="m1"><span class="n">1</span>Variables de contrôle</button>
+  <button role="tab" data-tab="m2"><span class="n">2</span>Appariement</button>
+  <button role="tab" data-tab="m3"><span class="n">3</span>Variable instrumentale</button>
+  <button role="tab" data-tab="m4"><span class="n">4</span>Discontinuité</button>
+  <button role="tab" data-tab="m5"><span class="n">5</span>Double différence</button>
+  <button role="tab" data-tab="m6"><span class="n">6</span>Contrôle synthétique</button>
+  <button role="tab" data-tab="m7"><span class="n">7</span>Expérience aléatoire</button>
+  <button role="tab" data-tab="verdict"><span class="n">8</span>Le verdict</button>
+  <button role="tab" data-tab="quiz"><span class="n">?</span>Testez-vous</button>
+</nav>
+
+<!-- ================= 0 ================= -->
+<section class="panel" id="p-piege" role="tabpanel">
+  <div class="deck" data-ch="piege"></div>
+  <div class="text">
+    <h2><span class="k">Avant les méthodes</span>Pourquoi le chiffre brut trompe</h2>
+    <div class="predict" data-p="piege"></div>
+    <p class="q">«&nbsp;Là où il y a des Casques bleus, il y a plus de morts&nbsp;: l'ONU aggrave les choses.&nbsp;»</p>
+    <p>Dans cette simulation, 160 conflits ont chacun une <b>difficulté</b> (de 0 à 10&nbsp;: nombre de factions, absence de vainqueur), mesurée avant toute mission. Plus un conflit est difficile, plus il fait de victimes. Le Conseil de sécurité envoie des missions, souvent là où la situation est la pire. Et la mission a un vrai effet, que vous fixez vous-même (par défaut, elle <b>protège</b>).</p>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Regardez l'écart brut&nbsp;: les pays avec mission ont plus de morts, alors que la mission protège.</li>
+        <li>Mettez le curseur «&nbsp;le Conseil choisit selon la difficulté&nbsp;» à zéro (missions au hasard). Que devient l'écart brut&nbsp;?</li>
+        <li>Remettez-le au maximum, puis cliquez sur <b>Révéler la difficulté</b>&nbsp;: les points se rangent selon la cause commune.</li>
+        <li>Cliquez sur <b>Montrer le contrefactuel</b>&nbsp;: chaque pays avec mission, dans le monde où il n'en a pas reçu. Ce monde-là, on ne le voit jamais.</li>
+      </ol>
+    </div>
+    <dl class="sheet">
+      <div><dt>La décomposition</dt><dd>Écart brut = effet de la mission + biais de sélection. Le biais mesure à quel point les pays aidés étaient différents <i>avant</i> la mission.</dd></div>
+    </dl>
+    <details class="defi"><summary>Défi</summary><p>Trouvez un réglage où la mission sauve des vies mais où l'écart brut est quand même positif, puis un réglage où les deux ont le même signe. Qu'est-ce qui change entre les deux&nbsp;?</p><p><i>Piste&nbsp;:</i> tout se joue sur la sélection. Quand le Conseil choisit au hasard, l'écart brut retrouve le vrai effet (au bruit près).</p></details>
+    <p class="course">Dans le cours&nbsp;: diapositives «&nbsp;Un chiffre troublant&nbsp;», «&nbsp;Trois histoires&nbsp;» et «&nbsp;Le biais de sélection&nbsp;» (568 contre 267 civils tués).</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · 160 conflits simulés</div>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-t"/></svg>avec mission</span><span><svg width="14" height="14"><rect x="3" y="3" width="8" height="8" class="mk-c"/></svg>sans mission</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-cf"/></svg>contrefactuel</span></div></div>
+    <div class="chartbox"><svg class="chart" id="c0" role="img" aria-label="Civils tués selon la présence d'une mission"></svg></div>
+    <div class="btns">
+      <button class="btn" id="b0g" aria-pressed="false">Révéler la difficulté</button>
+      <button class="btn" id="b0cf" aria-pressed="false">Montrer le contrefactuel</button>
+      <button class="btn" id="b0n">Nouveau tirage</button><button class="btn" data-reset="piege">Réinitialiser</button>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="s0s">Le Conseil choisit selon la difficulté</label><output id="o0s"></output><input type="range" id="s0s" min="0" max="1" step="0.05" value="0.8"><span class="hint">0&nbsp;: missions tirées au hasard. Au maximum&nbsp;: presque seulement les pires conflits.</span></div>
+      <div class="ctl"><label for="s0t">Vrai effet d'une mission (civils tués par an)</label><output id="o0t"></output><input type="range" id="s0t" min="-250" max="100" step="10" value="-120"></div>
+    </div>
+    <div class="readouts">
+      <div class="ro raw"><div class="k">Écart brut</div><div class="v" id="r0a"></div><div class="note">avec − sans mission</div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r0b"></div><div class="note">connu car simulé</div></div>
+      <div class="ro bias" id="ro0c"><div class="k">Biais de sélection</div><div class="v" id="r0c"></div><div class="note">écart brut − effet réel</div></div>
+    </div>
+    <div class="eqline" id="eq0"></div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 1 ================= -->
+<section class="panel" id="p-m1" role="tabpanel" hidden>
+  <div class="deck" data-ch="m1"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 1</span>Les variables de contrôle&nbsp;: comparer à profil égal</h2>
+    <div class="predict" data-p="m1"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Les pays sans mission qui ont le même profil <b>mesuré</b> (ici, la même difficulté).</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>On a mesuré tout ce qui pousse à la fois à envoyer une mission et à la violence.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un facteur non mesuré, comme la <b>volonté de paix</b> des belligérants&nbsp;: ceux qui veulent vraiment la paix acceptent plus volontiers une mission.</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Passez de <b>Comparaison brute</b> à <b>Groupes de difficulté</b>&nbsp;: dans chaque groupe, qui fait mieux&nbsp;? C'est le paradoxe de Simpson.</li>
+        <li>Le biais reste important avec trois groupes. Augmentez le nombre de groupes&nbsp;: il fond (en moyenne sur de nombreux tirages, environ +40 avec 3 groupes, +15 avec 5, +5 avec 10&nbsp;; un tirage isolé peut s'en écarter).</li>
+        <li>Cliquez sur <b>Retirer l'effet de la difficulté</b>&nbsp;: les points glissent, comme si tous les conflits avaient la même difficulté. L'écart restant est l'estimation par régression.</li>
+        <li>Montez le curseur «&nbsp;volonté de paix non mesurée&nbsp;»&nbsp;: l'estimation s'éloigne du vrai effet, même en contrôlant la difficulté.</li>
+        <li>Cochez «&nbsp;mesurer aussi la volonté de paix&nbsp;»&nbsp;: le biais disparaît. Mais dans la réalité, on ne sait pas la mesurer.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>Avec trois groupes seulement, l'estimation reste biaisée même sans facteur caché. Pourquoi&nbsp;?</p><p><i>Piste&nbsp;:</i> à l'intérieur d'un groupe, les pays avec mission restent plus difficiles que les autres (en moyenne de trois quarts de point sur l'échelle de 0 à 10, soit une quarantaine de morts de plus). Trois groupes, c'est un contrôle grossier&nbsp;; la régression utilise la difficulté exacte. Même leçon que pour les variables non mesurées&nbsp;: une variable mal mesurée ne contrôle qu'en partie.</p></details>
+    <p class="course">Dans le cours&nbsp;: Fortna (2004), 39&nbsp;% contre 42&nbsp;% de rechutes en brut, puis un risque réduit de plus de 55&nbsp;% à caractéristiques égales&nbsp;; la critique de Kocher (2014).</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · 170 conflits simulés</div>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-t"/></svg>avec mission</span><span><svg width="14" height="14"><rect x="3" y="3" width="8" height="8" class="mk-c"/></svg>sans mission</span></div></div>
+    <div class="seg" role="group" aria-label="Étape">
+      <button data-step="0" aria-pressed="true">Comparaison brute</button>
+      <button data-step="1" aria-pressed="false">Groupes de difficulté</button>
+      <button data-step="2" aria-pressed="false">Retirer l'effet de la difficulté</button>
+    </div>
+    <div class="chartbox"><svg class="chart" id="c1" role="img" aria-label="Comparaison à difficulté égale"></svg></div>
+    <div class="controls">
+      <div class="ctl"><label for="s1h">Volonté de paix non mesurée</label><output id="o1h"></output><input type="range" id="s1h" min="0" max="1" step="0.05" value="0"><span class="hint">Elle rend une mission plus probable et la violence plus faible.</span></div>
+      <div class="ctl"><label for="s1g">Nombre de groupes de difficulté (étape 2)</label><output id="o1g"></output><input type="range" id="s1g" min="2" max="10" step="1" value="3"><span class="hint">Plus les groupes sont fins, plus les pays comparés se ressemblent vraiment.</span></div>
+      <label class="chk"><input type="checkbox" id="k1u"> Mesurer aussi la volonté de paix (étape 3)</label>
+    </div>
+    <div class="btns"><button class="btn" id="b1n">Nouveau tirage</button><button class="btn" data-reset="m1">Réinitialiser</button></div>
+    <div class="readouts">
+      <div class="ro est"><div class="k" id="l1a">Estimation</div><div class="v" id="r1a"></div><div class="note" id="n1a"></div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r1b"></div><div class="note">connu car simulé</div></div>
+      <div class="ro bias" id="ro1c"><div class="k">Biais</div><div class="v" id="r1c"></div><div class="note">estimation − effet réel</div></div>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 2 ================= -->
+<section class="panel" id="p-m2" role="tabpanel" hidden>
+  <div class="deck" data-ch="m2"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 2</span>L'appariement&nbsp;: un jumeau pour chaque pays</h2>
+    <div class="predict" data-p="m2"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Pour chaque pays avec mission, le pays sans mission qui lui ressemblait le plus <b>avant</b> (difficulté et durée de la guerre).</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>Les jumeaux ne diffèrent sur rien d'important et de non mesuré.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Des jumeaux qui ne se ressemblent pas vraiment, ou des pays aidés qui n'ont <b>aucun</b> équivalent (le «&nbsp;pays D&nbsp;» du cours).</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Chaque trait relie un pays avec mission à son jumeau. Le halo pointillé montre jusqu'où on accepte une ressemblance.</li>
+        <li>Élargissez la distance tolérée&nbsp;: plus aucun pays n'est écarté, mais les conflits les plus durs reçoivent des jumeaux lointains et moins difficiles, et le biais grimpe (en moyenne sur de nombreux tirages, environ +5 avec une dizaine de pays appariés, +20 avec les 24&nbsp;; un tirage isolé peut s'en écarter).</li>
+        <li>Réduisez-la&nbsp;: les jumeaux sont proches, mais les conflits les plus durs (en haut à droite) sont écartés. L'effet ne vaut plus que pour les autres.</li>
+        <li>Cochez «&nbsp;difficulté seulement&nbsp;»&nbsp;: les jumeaux se ressemblent sur la difficulté mais pas sur la durée, et le biais explose, quelle que soit la distance. C'est le piège de la méthode 1&nbsp;: on n'apparie que sur ce que l'on mesure.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>King et Zeng (2007) reprochent à Doyle et Sambanis de comparer des cas «&nbsp;qui ne se ressemblent pas&nbsp;». Où, sur le graphique, se trouvent ces cas&nbsp;?</p><p><i>Piste&nbsp;:</i> dans la zone où il n'y a que des ronds bleus. Toute comparaison y est une extrapolation.</p></details>
+    <p class="course">Dans le cours&nbsp;: Gilligan et Sergenti (2008), risque de rechute −70&nbsp;% sans appariement, −86&nbsp;% avec.</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · 24 pays avec mission, 80 sans</div>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-t"/></svg>avec mission</span><span><svg width="14" height="14"><rect x="3" y="3" width="8" height="8" class="mk-c"/></svg>sans mission</span><span><svg width="16" height="16"><circle cx="8" cy="8" r="6.5" class="ring-warn"/><circle cx="8" cy="8" r="3.5" class="mk-t"/></svg>sans jumeau&nbsp;: écarté</span></div></div>
+    <div class="chartbox"><svg class="chart" id="c2" role="img" aria-label="Appariement des pays selon la difficulté et la durée"></svg></div>
+    <div class="controls">
+      <div class="ctl"><label for="s2c">Distance maximale tolérée</label><output id="o2c"></output><input type="range" id="s2c" min="0.1" max="1.5" step="0.05" value="0.5"><span class="hint">En écarts-types de difficulté et de durée. Au-delà de 1,2 environ, tous les pays ont déjà un jumeau&nbsp;: plus rien ne change.</span></div>
+      <label class="chk"><input type="checkbox" id="k2g"> Apparier sur la difficulté seulement (oublier la durée de la guerre)</label>
+    </div>
+    <div class="btns"><button class="btn" id="b2n">Nouveau tirage</button><button class="btn" data-reset="m2">Réinitialiser</button></div>
+    <div class="readouts">
+      <div class="ro raw"><div class="k">Comparaison brute</div><div class="v" id="r2a"></div><div class="note">tous les pays</div></div>
+      <div class="ro est"><div class="k">Avec jumeaux</div><div class="v" id="r2b"></div><div class="note" id="n2b"></div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r2c"></div><div class="note">civils tués par an</div></div>
+      <div class="ro bias" id="ro2d"><div class="k">Biais</div><div class="v" id="r2d"></div><div class="note">avec jumeaux − effet réel</div></div>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 3 ================= -->
+<section class="panel" id="p-m3" role="tabpanel" hidden>
+  <div class="deck" data-ch="m3"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 3</span>La variable instrumentale&nbsp;: le coup de pouce</h2>
+    <div class="predict" data-p="m3"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Les conflits <b>sans</b> coup de pouce. Ici, le coup de pouce est la rotation au Conseil de sécurité&nbsp;: les sièges africains tournent entre les sous-régions selon un ordre fixé d'avance, et quand la sous-région d'un pays en guerre siège, ce pays reçoit plus de Casques bleus.</dd></div>
+      <div><dt>Les trois conditions</dt><dd>(1) Le coup de pouce équivaut à un tirage au sort&nbsp;: sans lien avec les facteurs cachés. (2) Il change vraiment le nombre de soldats. (3) Il n'agit sur les violences <b>que</b> par les soldats.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un coup de pouce trop faible (estimation très instable), ou un lien direct interdit&nbsp;: siéger au Conseil apporte aussi des sanctions ou de l'aide.</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Les deux gros repères sont les moyennes des deux groupes. La pente du trait qui les relie est l'estimation&nbsp;: écart de victimes ÷ écart de soldats.</li>
+        <li>Comparez avec la pente pointillée (comparaison simple)&nbsp;: les missions grossissent là où les conflits sont difficiles, ce qui tire cette pente vers zéro.</li>
+        <li>Baissez la force du coup de pouce, puis cliquez sur <b>Répéter 300 fois</b>&nbsp;: l'estimation part dans tous les sens.</li>
+        <li>Ajoutez un lien direct&nbsp;: l'estimation est biaisée, et rien sur le graphique ne vous prévient.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>Pourquoi la condition 3 ne peut-elle pas se tester avec les données&nbsp;?</p><p><i>Piste&nbsp;:</i> un lien direct produit exactement le même nuage de points qu'un effet des soldats plus fort. Les auteurs vérifient les canaux mesurables (sanctions, aide, médiation), mais l'hypothèse elle-même reste un argument.</p></details>
+    <p class="course">Dans le cours&nbsp;: Carnegie et Mikulaschek (2020), environ 600 Casques bleus de plus, 3 à 5 civils tués de moins par mois pour 100 soldats.</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · conflits simulés</div>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-t"/></svg>sous-région au Conseil</span><span><svg width="14" height="14"><rect x="3" y="3" width="8" height="8" class="mk-c"/></svg>pas au Conseil</span><span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" class="ln-warn"/></svg>comparaison simple</span></div></div>
+    <div class="chartbox"><svg class="chart" id="c3" role="img" aria-label="Victimes civiles selon le nombre de Casques bleus"></svg></div>
+    <div class="controls">
+      <div class="ctl"><label for="s3p">Force du coup de pouce (soldats en plus)</label><output id="o3p"></output><input type="range" id="s3p" min="0.5" max="12" step="0.5" value="6"></div>
+      <div class="ctl"><label for="s3d">Lien direct interdit (civils par mois)</label><output id="o3d"></output><input type="range" id="s3d" min="-30" max="30" step="2" value="0"><span class="hint">Effet du siège au Conseil qui ne passe pas par les soldats (sanctions, aide).</span></div>
+      <div class="ctl"><label for="s3n">Nombre de conflits</label><output id="o3n"></output><input type="range" id="s3n" min="20" max="300" step="10" value="80"></div>
+    </div>
+    <div class="btns"><button class="btn" id="b3n">Nouveau tirage</button><button class="btn" data-reset="m3">Réinitialiser</button><button class="btn primary" id="b3r">Répéter 300 fois</button></div>
+    <div class="readouts">
+      <div class="ro"><div class="k">Étape 1</div><div class="v" id="r3a"></div><div class="note">écart de soldats sur ce tirage (varie autour du réglage)</div></div>
+      <div class="ro"><div class="k">Étape 2</div><div class="v" id="r3b"></div><div class="note">écart de civils tués par mois</div></div>
+      <div class="ro est"><div class="k">Effet estimé</div><div class="v" id="r3c"></div><div class="note">pour 100 soldats (étape 2 ÷ étape 1)</div></div>
+      <div class="ro raw"><div class="k">Comparaison simple</div><div class="v" id="r3d"></div><div class="note">pente du nuage</div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r3e">−5</div><div class="note">pour 100 soldats</div></div>
+    </div>
+    <div id="rep3" hidden>
+      <div class="legend" style="margin-bottom:6px"><span><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" class="bar-t"/></svg>variable instrumentale</span><span><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" class="bar-w"/></svg>comparaison simple</span></div>
+      <svg class="chart" id="c3h" role="img" aria-label="Distribution des estimations sur 300 tirages"></svg>
+      <p class="verdict" id="v3"></p>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 4 ================= -->
+<section class="panel" id="p-m4" role="tabpanel" hidden>
+  <div class="deck" data-ch="m4"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 4</span>La discontinuité&nbsp;: de part et d'autre d'un seuil</h2>
+    <div class="predict" data-p="m4"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Les hameaux <b>juste de l'autre côté</b> du seuil. Ici (règle simplifiée), un hameau noté sous 2,5 est bombardé, un hameau noté au-dessus ne l'est pas.</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>Près du seuil, seul le traitement change brusquement&nbsp;: un hameau à 2,49 ressemble à un hameau à 2,51.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Une fenêtre trop large (on compare des hameaux qui ne se ressemblent plus), une tricherie sur la note, et un résultat qui ne vaut que près du seuil.</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Le saut vert à 2,5 est l'estimation&nbsp;: la différence entre les deux droites, au seuil.</li>
+        <li>Ajoutez de la courbure, puis élargissez la fenêtre&nbsp;: les droites ne suivent plus la vraie relation et le saut devient faux. Rétrécissez-la&nbsp;: c'est plus juste, mais avec moins de hameaux.</li>
+        <li>Activez la tricherie&nbsp;: des chefs bien introduits gonflent la note de leur hameau. Regardez l'histogramme en dessous&nbsp;: un tas apparaît juste au-dessus du seuil.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>Pourquoi les tricheurs biaisent-ils l'estimation, alors qu'ils ne sont qu'une poignée&nbsp;?</p><p><i>Piste&nbsp;:</i> ils ne sont pas pris au hasard. Les hameaux qui réussissent à tricher sont aussi ceux où la guérilla est faible&nbsp;; ils quittent le côté gauche et s'entassent juste à droite, là où pèse l'estimation.</p></details>
+    <p class="course">Dans le cours&nbsp;: Dell et Querubin (2018), Viêt Nam, notes arrondies (2,49 devient 2)&nbsp;; et, pour les Casques bleus, une discontinuité à manier avec prudence à la frontière Mali-Burkina Faso (Nomikos, 2025).</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · 600 hameaux simulés</div>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="3.6" class="mk-t"/></svg>bombardé (note &lt; 2,5)</span><span><svg width="14" height="14"><rect x="4" y="4" width="6" height="6" class="mk-c"/></svg>épargné</span></div></div>
+    <div class="chartbox"><svg class="chart" id="c4" role="img" aria-label="Présence de guérilla selon la note de sécurité"></svg><svg class="chart" id="c4h" role="img" aria-label="Nombre de hameaux par note"></svg></div>
+    <div class="controls">
+      <div class="ctl"><label for="s4h">Largeur de la fenêtre autour du seuil</label><output id="o4h"></output><input type="range" id="s4h" min="0.15" max="1.5" step="0.05" value="0.5"></div>
+      <div class="ctl"><label for="s4c">Courbure de la vraie relation</label><output id="o4c"></output><input type="range" id="s4c" min="0" max="1" step="0.05" value="0"></div>
+      <label class="chk"><input type="checkbox" id="k4m"> Tricherie sur la note</label>
+    </div>
+    <div class="btns"><button class="btn" id="b4n">Nouveau tirage</button><button class="btn" data-reset="m4">Réinitialiser</button></div>
+    <div class="readouts">
+      <div class="ro est"><div class="k">Saut estimé</div><div class="v" id="r4a"></div><div class="note">points de probabilité</div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r4b">+15</div><div class="note">points de probabilité</div></div>
+      <div class="ro bias" id="ro4c"><div class="k">Biais</div><div class="v" id="r4c"></div><div class="note">saut − effet réel</div></div>
+      <div class="ro"><div class="k">Hameaux utilisés</div><div class="v" id="r4d"></div><div class="note">dans la fenêtre</div></div>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 5 ================= -->
+<section class="panel" id="p-m5" role="tabpanel" hidden>
+  <div class="deck" data-ch="m5"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 5</span>La double différence&nbsp;: comparer des évolutions</h2>
+    <div class="predict" data-p="m5"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Sans la mission, les comtés traités auraient suivi <b>la même évolution</b> que les autres. Les niveaux de départ peuvent différer&nbsp;: seule la pente compte.</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>Les tendances parallèles. Cette hypothèse ne se prouve pas, mais on peut vérifier qu'elle tenait <b>avant</b> l'arrivée de la mission.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>L'ONU choisit des comtés qui allaient déjà mieux&nbsp;; ou la violence chassée se déplace chez les voisins, qui servent de témoins.</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>La ligne pointillée est le contrefactuel&nbsp;: la courbe des comtés avec mission, calée sur leur niveau moyen d'avant la mission, puis décalée pour suivre l'évolution des autres.</li>
+        <li>Ajoutez un écart de tendance&nbsp;: avant la mission, les deux courbes s'écartent déjà, et l'estimation devient fausse.</li>
+        <li>Cochez le <b>test placebo</b>&nbsp;: on fait comme si la mission arrivait en période 3. S'il trouve un «&nbsp;effet&nbsp;», les tendances n'étaient pas parallèles.</li>
+        <li>Ajoutez du déplacement de la violence&nbsp;: les témoins se dégradent, et l'effet paraît plus grand qu'il n'est.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>Mettez un vrai effet nul et un écart de tendance positif. Que conclurait un observateur pressé&nbsp;? Que montre le test placebo&nbsp;?</p><p><i>Piste&nbsp;:</i> il conclurait à un effet positif de la mission. Le placebo trouve un «&nbsp;effet&nbsp;» avant même l'arrivée des Casques bleus&nbsp;: signal d'alerte.</p></details>
+    <p class="course">Dans le cours&nbsp;: Bove, Di Salvatore et Elia (2022), Soudan du Sud, se sentir en sécurité +12,5 points. Et Kocher (2014)&nbsp;: la violence baissait déjà avant l'arrivée des Casques bleus.</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · moyennes de 46 comtés simulés</div>
+      <div class="legend"><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-t"/><circle cx="13" cy="6" r="4" class="mk-t"/></svg>comtés avec mission</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-c"/><rect x="9.5" y="2.5" width="7" height="7" class="mk-c"/></svg>sans mission</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-cf"/><circle cx="13" cy="6" r="4" class="mk-cf"/></svg>contrefactuel</span></div></div>
+    <div class="chartbox"><svg class="chart" id="c5" role="img" aria-label="Sentiment de sécurité au fil des périodes"></svg></div>
+    <div class="controls">
+      <div class="ctl"><label for="s5t">Vrai effet de la mission (points)</label><output id="o5t"></output><input type="range" id="s5t" min="-10" max="25" step="0.5" value="12.5"></div>
+      <div class="ctl"><label for="s5d">Écart de tendance entre les deux groupes</label><output id="o5d"></output><input type="range" id="s5d" min="-2" max="2" step="0.1" value="0"><span class="hint">En points par période. Zéro&nbsp;: tendances parallèles.</span></div>
+      <div class="ctl"><label for="s5v">Violence déplacée chez les voisins (points)</label><output id="o5v"></output><input type="range" id="s5v" min="0" max="10" step="0.5" value="0"></div>
+      <label class="chk"><input type="checkbox" id="k5p"> Test placebo&nbsp;: fausse arrivée en période 3</label>
+    </div>
+    <div class="btns"><button class="btn" id="b5n">Nouveau tirage</button><button class="btn" data-reset="m5">Réinitialiser</button></div>
+    <div class="readouts">
+      <div class="ro"><div class="k">1re différence</div><div class="v" id="r5a"></div><div class="note">après − avant, avec mission</div></div>
+      <div class="ro"><div class="k">2e différence</div><div class="v" id="r5b"></div><div class="note">après − avant, sans mission</div></div>
+      <div class="ro est"><div class="k" id="l5c">Double différence</div><div class="v" id="r5c"></div><div class="note">1re − 2e</div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r5d"></div><div class="note" id="n5d">connu car simulé</div></div>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 6 ================= -->
+<section class="panel" id="p-m6" role="tabpanel" hidden>
+  <div class="deck" data-ch="m6"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 6</span>Le contrôle synthétique&nbsp;: un jumeau composite</h2>
+    <div class="predict" data-p="m6"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Un «&nbsp;pays synthétique&nbsp;», mélange pondéré de pays sans mission qui reproduit la trajectoire du pays traité <b>avant</b> la mission.</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>S'il suit fidèlement le vrai pays avant, il dit ce qui se serait passé après, à condition qu'aucun autre choc ne frappe le pays au même moment.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un mauvais ajustement avant, un autre choc la même année, et le hasard&nbsp;: d'où le test placebo.</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Construisez le jumeau à la main avec les curseurs de poids. Visez un écart moyen avant la mission le plus petit possible.</li>
+        <li>Cliquez sur <b>Laisser l'algorithme choisir</b>&nbsp;: comparez ses poids aux vôtres.</li>
+        <li>Lancez les <b>placebos</b>&nbsp;: on refait le calcul pour chaque pays du réservoir, comme s'il avait reçu la mission. L'écart du vrai pays sort-il du lot&nbsp;?</li>
+        <li>Mettez le vrai effet à zéro et cochez «&nbsp;un autre choc la même année&nbsp;»&nbsp;: la méthode attribue le choc à la mission.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>Mettez le vrai effet à −3. Le placebo permet-il encore de distinguer l'effet du hasard&nbsp;?</p><p><i>Piste&nbsp;:</i> souvent non. C'est la situation de Bove et Elia (2018)&nbsp;: dans sept pays sur onze, pas d'effet détectable, ce qui ne prouve pas qu'il n'y en a aucun.</p></details>
+    <p class="course">Dans le cours&nbsp;: Bove et Elia (2018), onze pays hôtes&nbsp;; Abadie et Gardeazabal (2003), le Pays basque (85&nbsp;% Catalogne, 15&nbsp;% Madrid).</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · un pays traité, sept pays dans le réservoir</div>
+      <div class="legend"><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-t"/><circle cx="13" cy="6" r="4" class="mk-t"/></svg>pays traité</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-c"/><rect x="9.5" y="2.5" width="7" height="7" class="mk-c"/></svg>pays synthétique</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-pool" style="opacity:.8"/></svg>réservoir</span></div></div>
+    <div class="chartbox"><svg class="chart" id="c6" role="img" aria-label="PIB par habitant du pays traité et de son jumeau synthétique"></svg></div>
+    <div class="weights" id="w6"></div>
+    <div class="btns"><button class="btn primary" id="b6o">Laisser l'algorithme choisir</button><button class="btn" id="b6e">Poids égaux</button><button class="btn" id="b6p">Lancer les placebos</button><button class="btn" id="b6n">Nouveau tirage</button><button class="btn" data-reset="m6">Réinitialiser</button></div>
+    <div class="controls">
+      <div class="ctl"><label for="s6t">Vrai effet de la mission (points d'indice)</label><output id="o6t"></output><input type="range" id="s6t" min="-15" max="15" step="1" value="-8"></div>
+      <label class="chk"><input type="checkbox" id="k6o"> Un autre choc frappe le pays la même année (−10)</label>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="ro6a"><div class="k">Ajustement avant</div><div class="v" id="r6a"></div><div class="note" id="n6a"></div></div>
+      <div class="ro est"><div class="k">Écart après</div><div class="v" id="r6b"></div><div class="note">effet estimé (moyenne des 5 dernières années)</div></div>
+      <div class="ro true"><div class="k">Effet de la mission</div><div class="v" id="r6c"></div><div class="note">connu car simulé</div></div>
+    </div>
+    <div id="pl6" hidden>
+      <div class="legend" style="margin-bottom:6px"><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-t"/></svg>écart du pays traité</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-pool" style="opacity:.9"/></svg>écarts placebos</span></div>
+      <svg class="chart" id="c6b" role="img" aria-label="Écarts des placebos"></svg>
+      <p class="verdict" id="v6"></p>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= 7 ================= -->
+<section class="panel" id="p-m7" role="tabpanel" hidden>
+  <div class="deck" data-ch="m7"></div>
+  <div class="text">
+    <h2><span class="k">Méthode 7</span>L'expérience aléatoire&nbsp;: laisser le hasard choisir</h2>
+    <div class="predict" data-p="m7"></div>
+    <dl class="sheet">
+      <div><dt>Le contrefactuel</dt><dd>Le groupe témoin, tiré au sort. Le hasard équilibre les deux groupes <b>en moyenne</b>, sur tout, même sur ce qu'on ne voit pas.</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>Le tirage a bien eu lieu et a été respecté. Il reste du hasard d'un tirage à l'autre, qui diminue avec le nombre de villages.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>La validité externe&nbsp;: ce qui marche dans trois comtés libériens marche-t-il au Mali&nbsp;?</dd></div>
+    </dl>
+    <div>
+      <div class="h3">À essayer</div>
+      <ol class="steps">
+        <li>Une ONG forme au dialogue la moitié des villages. Cliquez sur <b>Révéler la volonté cachée</b>&nbsp;: plus la case est sombre, plus le village était déjà disposé au dialogue.</li>
+        <li>Laissez l'ONG choisir ses villages&nbsp;: elle prend les plus motivés, et l'effet estimé est gonflé.</li>
+        <li>Revenez au tirage au sort et cliquez sur <b>Répéter 500 fois</b>&nbsp;: chaque tirage se trompe un peu, mais en moyenne il tombe juste.</li>
+        <li>Réduisez le nombre de villages et recommencez&nbsp;: les estimations se dispersent.</li>
+      </ol>
+    </div>
+    <details class="defi"><summary>Défi</summary><p>Pourquoi ne tire-t-on pas au sort les pays qui reçoivent une mission de l'ONU&nbsp;?</p><p><i>Piste&nbsp;:</i> l'aide doit aller d'abord aux besoins, c'est politiquement impossible, et il y a trop peu de missions. On tire au sort des programmes&nbsp;: patrouilles, formations, actions locales.</p></details>
+    <p class="course">Dans le cours&nbsp;: Blair, Karim et Morse (2019), patrouilles au Liberia (36 communautés tirées au sort, 38 témoins)&nbsp;; Nomikos (2022), Bamako.</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · villages simulés</div>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-t"/></svg>formé</span><span><svg width="14" height="14"><rect x="3" y="3" width="8" height="8" class="mk-c"/></svg>témoin</span><span id="lg7" hidden><svg width="34" height="12"><rect x="0" y="1" width="10" height="10" class="cell" fill-opacity=".06"/><rect x="12" y="1" width="10" height="10" class="cell" fill-opacity=".3"/><rect x="24" y="1" width="10" height="10" class="cell" fill-opacity=".55"/></svg>volonté cachée (sombre = forte)</span></div></div>
+    <div class="seg" role="group" aria-label="Qui choisit">
+      <button data-mode="random" aria-pressed="true">Tirage au sort</button>
+      <button data-mode="ngo" aria-pressed="false">L'ONG choisit</button>
+    </div>
+    <div class="chartbox"><svg class="chart" id="c7" role="img" aria-label="Grille des villages"></svg></div>
+    <div class="controls">
+      <div class="ctl"><label for="s7n">Nombre de villages</label><output id="o7n"></output><input type="range" id="s7n" min="20" max="200" step="20" value="200"></div>
+    </div>
+    <div class="btns"><button class="btn" id="b7v" aria-pressed="false">Révéler la volonté cachée</button><button class="btn" id="b7n">Nouveau tirage</button><button class="btn" data-reset="m7">Réinitialiser</button><button class="btn primary" id="b7r">Répéter 500 fois</button></div>
+    <div class="readouts">
+      <div class="ro"><div class="k">Volonté moyenne</div><div class="v" id="r7a"></div><div class="note">formés / témoins (0 = moyenne)</div></div>
+      <div class="ro est"><div class="k">Effet estimé</div><div class="v" id="r7b"></div><div class="note">conflits locaux par an</div></div>
+      <div class="ro true"><div class="k">Effet réel</div><div class="v">−2,00</div><div class="note">connu car simulé</div></div>
+    </div>
+    <div id="rep7" hidden>
+      <svg class="chart" id="c7h" role="img" aria-label="Distribution des estimations sur 500 tirages"></svg>
+      <p class="verdict" id="v7"></p>
+    </div>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+
+<!-- ================= Verdict ================= -->
+<section class="panel" id="p-verdict" role="tabpanel" hidden>
+  <div class="deck" data-ch="verdict"></div>
+  <div class="text">
+    <h2><span class="k">Synthèse</span>La triangulation</h2>
+    <p>Le graphique rassemble toutes les simulations du site. Pour chaque méthode, on a refait l'estimation 100 fois et l'on mesure la <b>part du vrai effet retrouvée</b>&nbsp;: 1 si l'estimation tombe juste, 0 si elle ne trouve rien, un nombre négatif si elle se trompe de signe.</p>
+    <div>
+      <div class="h3">À lire</div>
+      <ol class="steps">
+        <li><b>Hypothèse respectée</b>&nbsp;: toutes les méthodes tombent près de 1, sauf la comparaison brute, qui se trompe de signe. Leur précision diffère beaucoup&nbsp;: la double différence est serrée, la variable instrumentale très large.</li>
+        <li><b>Hypothèse violée</b>&nbsp;: chaque méthode se trompe, mais chacune à sa façon et pour sa propre raison. L'instrument et l'appariement incomplet sous-estiment, les autres surestiment, et pas du même montant.</li>
+        <li>D'où la force de la triangulation&nbsp;: pour que des méthodes aux faiblesses différentes concluent toutes dans le même sens <i>à tort</i>, il faudrait que chacune voie son hypothèse violée, et dans la même direction.</li>
+      </ol>
+    </div>
+    <p class="course">C'est l'argument de Walter, Howard et Fortna (2021)&nbsp;: des dizaines d'études, avec des méthodes différentes, trouvent le même signe. Revenez au premier onglet avec le Conseil qui choisit les pires conflits&nbsp;: l'écart brut de départ mesurait surtout la sélection. Sur les vraies données du cours (diapositive «&nbsp;Nos 568 contre 267, passés à la régression&nbsp;»), l'écart de +301 civils tués tombe à +32 à violence passée égale, sans qu'aucune estimation soit significative.</p>
+  </div>
+  <div class="lab">
+    <div class="labhead"><div class="h3">Simulation · toutes les méthodes</div>
+      <div class="legend"><span><svg width="26" height="12"><line x1="2" y1="6" x2="24" y2="6" class="ci-ok"/><circle cx="13" cy="6" r="4.5" class="mk-t"/></svg>hypothèse respectée</span><span><svg width="26" height="12"><line x1="2" y1="6" x2="24" y2="6" class="ci-ko"/><rect x="9" y="2" width="8" height="8" class="mk-ko"/></svg>hypothèse violée</span><span><svg width="26" height="12"><line x1="2" y1="6" x2="24" y2="6" class="ci-raw"/><circle cx="13" cy="6" r="4.5" class="mk-raw"/></svg>comparaison brute</span></div></div>
+    <div class="seg" role="group" aria-label="Scénario">
+      <button data-tri="ok" aria-pressed="true">Hypothèse respectée</button>
+      <button data-tri="both" aria-pressed="false">Les deux</button>
+      <button data-tri="ko" aria-pressed="false">Hypothèse violée</button>
+    </div>
+    <div class="chartbox"><svg class="chart" id="c8" role="img" aria-label="Part du vrai effet retrouvée par chaque méthode"></svg></div>
+    <p class="tri-cap">Point&nbsp;: médiane sur 100 tirages (40 pour le contrôle synthétique). Trait&nbsp;: 9 tirages sur 10. Réglages par défaut de chaque onglet&nbsp;; l'hypothèse violée correspond au réglage indiqué en orange.</p>
+  </div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+<!-- ================= Quiz ================= -->
+<section class="panel" id="p-quiz" role="tabpanel" hidden>
+  <div class="deck" data-ch="quiz"></div>
+  <div class="text">
+    <h2><span class="k">Synthèse</span>Testez-vous&nbsp;: quelle méthode&nbsp;?</h2>
+    <p>Pour chaque question, quel contrefactuel construiriez-vous&nbsp;? Plusieurs méthodes peuvent se défendre&nbsp;: l'important est de nommer le point de comparaison et son hypothèse.</p>
+    <dl class="sheet">
+      <div><dt>Pour chaque méthode, trois questions</dt><dd>(1) À quoi compare-t-on&nbsp;? (2) Pourquoi est-ce crédible&nbsp;? (3) Qu'est-ce qui pourrait la rendre trompeuse&nbsp;?</dd></div>
+      <div><dt>Le bon réflexe</dt><dd>Avant tout chiffre, se demander&nbsp;: <b>comparé à quoi&nbsp;?</b></dd></div>
+    </dl>
+    <p class="score" id="score">Score&nbsp;: 0 / 5</p>
+  </div>
+  <div class="lab quiz" id="quiz"></div>
+  <nav class="chapnav" aria-label="Chapitres"></nav>
+</section>
+
+
+
+
+<footer>
+  <p>Les simulations utilisent des données fictives&nbsp;; le chiffre d'ouverture et la régression du cours reposent sur des données réelles (UCDP 26.1, Geo-PKO 2.3). Les ordres de grandeur des simulations s'inspirent des études présentées en cours (Fortna, 2004&nbsp;; Gilligan et Sergenti, 2008&nbsp;; Carnegie et Mikulaschek, 2020&nbsp;; Dell et Querubin, 2018&nbsp;; Bove, Di Salvatore et Elia, 2022&nbsp;; Bove et Elia, 2018&nbsp;; Blair, Karim et Morse, 2019). Guide&nbsp;: Walter, Howard et Fortna (2021).</p>
+  <p>Rodolphe Desbordes · SKEMA Centre for Global Risks (SCGR), SKEMA Business School.</p>
+</footer>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const NS="http://www.w3.org/2000/svg";
+const NB=" ", MINUS="−";
+function S(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function T(s,a,p){const e=S("text",a,p);e.textContent=s;return e;}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0;while(u===0)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r());}
+const mean=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:NaN;
+const sd=a=>{const m=mean(a);return Math.sqrt(mean(a.map(v=>(v-m)**2)));};
+const logi=x=>1/(1+Math.exp(-x));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+function fr(x,d=0){if(!isFinite(x))return "n.d.";const r=Number(x.toFixed(d));const s=Math.abs(r).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d});return (r<0?MINUS:"")+s;}
+function frs(x,d=0){if(!isFinite(x))return "n.d.";const r=Number(x.toFixed(d));return (r>0?"+":"")+fr(x,d);}
+function ticks(a,b,n){const st0=(b-a)/n,mag=10**Math.floor(Math.log10(st0)),e=st0/mag;const st=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag;const o=[];for(let v=Math.ceil(a/st-1e-9)*st;v<=b+1e-9;v+=st)o.push(Number(v.toFixed(10)));return o;}
+function decs(t){if(t.length<2)return 0;const s=Math.abs(t[1]-t[0]);return s>=1?0:s>=.1?1:2;}
+function width(svg){const w=svg.parentElement.clientWidth||640;return Math.max(300,Math.min(780,Math.floor(w)));}
+function frame(svg,o){
+  const W=o.W,H=o.H,m=Object.assign({l:58,r:18,t:16,b:46},o.m||{});
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  if(!svg._L){svg._L={};["ax","under","pts","over"].forEach(k=>svg._L[k]=S("g",{},svg));}
+  const L=svg._L;["ax","under","over"].forEach(k=>L[k].innerHTML="");
+  if(o.clearPts){L.pts.innerHTML="";L.pts._data=null;}
+  const sx=v=>m.l+(v-o.x[0])/(o.x[1]-o.x[0])*(W-m.l-m.r);
+  const sy=v=>H-m.b-(v-o.y[0])/(o.y[1]-o.y[0])*(H-m.t-m.b);
+  if(!o.noY){const yt=o.yt||ticks(o.y[0],o.y[1],o.ny||5),yd=decs(yt);
+    yt.forEach(v=>{S("line",{x1:m.l,x2:W-m.r,y1:sy(v),y2:sy(v),class:(v===0&&o.zero)?"zero":"grid"},L.ax);T(o.yf?o.yf(v):fr(v,yd),{x:m.l-8,y:sy(v)+4,"text-anchor":"end",class:"tick"},L.ax);});}
+  if(!o.noX){const xt=o.xt||ticks(o.x[0],o.x[1],o.nx||6),xd=decs(xt);
+    xt.forEach(v=>{S("line",{x1:sx(v),x2:sx(v),y1:H-m.b,y2:H-m.b+5,class:"base"},L.ax);T(o.xf?o.xf(v):fr(v,xd),{x:sx(v),y:H-m.b+19,"text-anchor":"middle",class:"tick"},L.ax);});}
+  S("line",{x1:m.l,x2:W-m.r,y1:H-m.b,y2:H-m.b,class:"base"},L.ax);
+  if(o.xl)T(o.xl,{x:(m.l+W-m.r)/2,y:H-8,"text-anchor":"middle",class:"alab"},L.ax);
+  if(o.yl){const cy=(m.t+H-m.b)/2;T(o.yl,{x:14,y:cy,transform:`rotate(-90 14 ${cy})`,"text-anchor":"middle",class:"alab"},L.ax);}
+  return {sx,sy,W,H,m,ax:L.ax,under:L.under,pts:L.pts,over:L.over,xl:m.l,xr:W-m.r,yb:H-m.b,yt:m.t};
+}
+const ln=(p,x1,y1,x2,y2,c)=>S("line",{x1,y1,x2,y2,class:c},p);
+const tx=(p,s,x,y,c,a="start")=>T(s,{x,y,class:c+" halo","text-anchor":a},p);
+function varrow(p,x,y1,y2,kind,both){const a={x1:x,x2:x,y1,y2,class:"arr-"+kind,"marker-end":`url(#ah-${kind})`};if(both)a["marker-start"]=`url(#ah-${kind})`;if(Math.abs(y2-y1)>3)S("line",a,p);}
+const path=(p,pts,c)=>S("path",{d:pts.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+","+q[1].toFixed(1)).join(""),class:c},p);
+function marker(g,k){g.innerHTML="";
+  if(k==="t")S("circle",{r:4.3,class:"mk-t"},g);
+  else if(k==="c")S("rect",{x:-3.7,y:-3.7,width:7.4,height:7.4,class:"mk-c"},g);
+}
+function syncPts(layer,data,kf,pf){
+  if(layer._data!==data){layer.innerHTML="";layer._data=data;data.forEach(o=>{o._el=S("g",{class:"pt"},layer);o._k=null;});}
+  data.forEach(o=>{const k=kf(o);if(o._k!==k){marker(o._el,k);o._k=k;}const [x,y]=pf(o);o._el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;});
+}
+function colLabels(F,nc,nt){const narrow=F.W<520;[[2.9,"sans mission",nc],[7.1,"avec mission",nt]].forEach(([x,l,n])=>{if(narrow){T(l,{x:F.sx(x),y:F.yb+17,"text-anchor":"middle",class:"alab"},F.ax);T("("+n+")",{x:F.sx(x),y:F.yb+32,"text-anchor":"middle",class:"tick"},F.ax);}else T(`${l} (${n})`,{x:F.sx(x),y:F.yb+20,"text-anchor":"middle",class:"alab"},F.ax);});}
+function dotT(p,x,y,r=4.3,cls="mk-t"){return S("circle",{cx:x,cy:y,r,class:cls},p);}
+function dotC(p,x,y,s=7.4,cls="mk-c"){return S("rect",{x:x-s/2,y:y-s/2,width:s,height:s,class:cls},p);}
+function setRO(id,val,biasBox,bias,tol){$("#"+id).textContent=val;if(biasBox){$("#"+biasBox).classList.toggle("big",Math.abs(bias)>tol);}}
+function ols(X,y){const k=X[0].length;const A=Array.from({length:k},()=>Array(k+1).fill(0));
+  X.forEach((r,i)=>{for(let a=0;a<k;a++){for(let b=0;b<k;b++)A[a][b]+=r[a]*r[b];A[a][k]+=r[a]*y[i];}});
+  for(let c=0;c<k;c++){let p=c;for(let r=c+1;r<k;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];const d=A[c][c];if(Math.abs(d)<1e-12)return null;for(let j=c;j<=k;j++)A[c][j]/=d;for(let r=0;r<k;r++)if(r!==c){const f=A[r][c];for(let j=c;j<=k;j++)A[r][j]-=f*A[c][j];}}
+  return A.map(r=>r[k]);}
+function linfit(xs,ys){const n=xs.length;if(n<3)return null;const mx=mean(xs),my=mean(ys);let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)**2;}if(sxx===0)return null;const b=sxy/sxx;return{a:my-b*mx,b};}
+function hist(svg,series,dom,truth,xl,truthLbl){
+  const W=width(svg),H=Math.round(Math.max(170,W*.3)),nb=32,bw=(dom[1]-dom[0])/nb;
+  const counts=series.map(s=>{const c=Array(nb).fill(0);let out=0;s.vals.forEach(v=>{const i=Math.floor((v-dom[0])/bw);if(i<0||i>=nb||!isFinite(v))out++;else c[i]++;});return{c,out};});
+  const ymax=Math.max(4,...counts.flatMap(o=>o.c))*1.18;
+  const F=frame(svg,{W,H,x:dom,y:[0,ymax],xl,yl:"tirages",ny:3,m:{t:22}});
+  series.forEach((s,k)=>counts[k].c.forEach((n,i)=>{if(n)S("rect",{x:F.sx(dom[0]+i*bw)+1,y:F.sy(n),width:Math.max(1,F.sx(dom[0]+bw)-F.sx(dom[0])-2),height:F.yb-F.sy(n),class:s.cls},F.under);}));
+  const x=F.sx(truth);S("line",{x1:x,x2:x,y1:F.yt-4,y2:F.yb,class:"arr-eff"},F.over);
+  tx(F.over,truthLbl,x+5,F.yt+8,"num-eff");
+  return counts;
+}
+
+/* ===================== 0. Le piège ===================== */
+const M0={s:.8,tau:-120,showG:false,showCF:false,seed:7};
+function genM0(){const r=rng(M0.seed);M0.d=[];for(let i=0;i<160;i++)M0.d.push({G:r()*10,u:r(),e:gauss(r)*55,j:r()-.5});}
+function rM0(){
+  const svg=$("#c0"),W=width(svg),H=Math.round(Math.max(300,W*.6));
+  M0.d.forEach(o=>{const p=logi(-.9+1.4*M0.s*(o.G-5));o.M=o.u<p;o.Y0=Math.max(5,30+55*o.G+o.e);o.Y1=Math.max(5,o.Y0+M0.tau);o.Y=o.M?o.Y1:o.Y0;});
+  const Tr=M0.d.filter(o=>o.M),Co=M0.d.filter(o=>!o.M);
+  const F=frame(svg,{W,H,x:[0,10],y:[0,800],noX:!M0.showG,xl:M0.showG?"difficulté du conflit, avant la mission (0 à 10)":null,yl:"civils tués par an",m:{r:70}});
+  const cx=o=>M0.showG?o.G:(o.M?7.1:2.9)+o.j*2.6;
+  syncPts(F.pts,M0.d,o=>o.M?"t":"c",o=>[F.sx(cx(o)),F.sy(o.Y)]);
+  const mT=mean(Tr.map(o=>o.Y)),mC=mean(Co.map(o=>o.Y)),mT0=mean(Tr.map(o=>o.Y0));
+  if(M0.showCF)Tr.forEach(o=>{const x=F.sx(cx(o));ln(F.under,x,F.sy(o.Y),x,F.sy(o.Y0),"cf-link");S("circle",{cx:x,cy:F.sy(o.Y0),r:4.3,class:"mk-cf"},F.over);});
+  if(!M0.showG){
+    colLabels(F,Co.length,Tr.length);
+    if(Tr.length&&Co.length){
+      ln(F.over,F.sx(1.3),F.sy(mC),F.sx(4.5),F.sy(mC),"mean");ln(F.over,F.sx(5.5),F.sy(mT),F.sx(8.7),F.sy(mT),"mean");
+      if(F.W>=520){tx(F.over,"moyenne "+fr(mC),F.sx(1.3),F.sy(mC)-8,"lbl-b");tx(F.over,"moyenne "+fr(mT),F.sx(5.5),F.sy(mT)-8,"lbl-b");}
+      const xg=F.sx(5);ln(F.over,F.sx(4.5),F.sy(mC),xg,F.sy(mC),"guide");ln(F.over,xg,F.sy(mT),F.sx(5.5),F.sy(mT),"guide");
+      varrow(F.over,xg,F.sy(mC),F.sy(mT),"ink",true);
+      const top=F.sy(Math.max(mT,mC));if(F.W>=520){tx(F.over,"écart brut",xg,top-24,"lbl-b","middle");tx(F.over,frs(mT-mC),xg,top-9,"num","middle");}
+      if(M0.showCF){ln(F.over,F.sx(5.5),F.sy(mT0),F.sx(8.7),F.sy(mT0),"mean-cf");tx(F.over,"les mêmes, sans mission",F.sx(8.7),F.sy(mT0)-8,"lbl-b","end");
+        const xe=F.sx(9.15);varrow(F.over,xe,F.sy(mT0),F.sy(mT),"eff",false);tx(F.over,"effet",xe+6,(F.sy(mT0)+F.sy(mT))/2-4,"num-eff");tx(F.over,frs(mT-mT0),xe+6,(F.sy(mT0)+F.sy(mT))/2+12,"num-eff");}
+    }
+  }
+  const brut=mT-mC,vrai=mT-mT0,sel=mT0-mC;
+  setRO("r0a",frs(brut));setRO("r0b",frs(vrai));setRO("r0c",frs(sel),"ro0c",sel,20);
+  $("#eq0").textContent=`écart brut (${frs(brut)}) = effet de la mission (${frs(vrai)}) + biais de sélection (${frs(sel)})`;
+  $("#o0s").textContent=M0.s===0?"au hasard":fr(M0.s*100)+NB+"%";$("#o0t").textContent=frs(M0.tau);
+}
+function initM0(){genM0();
+  $("#s0s").oninput=e=>{M0.s=+e.target.value;rM0();};
+  $("#s0t").oninput=e=>{M0.tau=+e.target.value;rM0();};
+  $("#b0g").onclick=e=>{M0.showG=!M0.showG;e.currentTarget.setAttribute("aria-pressed",M0.showG);e.currentTarget.textContent=M0.showG?"Ranger par groupe":"Révéler la difficulté";rM0();};
+  $("#b0cf").onclick=e=>{M0.showCF=!M0.showCF;e.currentTarget.setAttribute("aria-pressed",M0.showCF);rM0();};
+  $("#b0n").onclick=()=>{M0.seed++;genM0();rM0();};
+}
+
+/* ===================== 1. Contrôles ===================== */
+const M1={h:0,step:0,addU:false,seed:3,nb:3};
+function genM1(){const r=rng(M1.seed);M1.d=[];for(let i=0;i<170;i++)M1.d.push({G:r()*10,U:gauss(r),u:r(),e:gauss(r)*45,j:r()-.5});}
+function rM1(){
+  const svg=$("#c1"),W=width(svg),H=Math.round(Math.max(310,W*.62)),d=M1.d,tau=-120;
+  d.forEach(o=>{const p=logi(-.9+.95*(o.G-5)+2.4*M1.h*o.U);o.M=o.u<p;o.Y0=Math.max(0,40+55*o.G-110*M1.h*o.U+o.e);o.Y1=Math.max(0,o.Y0+tau);o.Y=o.M?o.Y1:o.Y0;});
+  const Tr=d.filter(o=>o.M),Co=d.filter(o=>!o.M);
+  const att=mean(Tr.map(o=>o.Y1-o.Y0));
+  const X=d.map(o=>M1.addU?[1,o.M?1:0,o.G,o.U]:[1,o.M?1:0,o.G]),b=ols(X,d.map(o=>o.Y));
+  const mG=mean(d.map(o=>o.G)),mU=mean(d.map(o=>o.U));
+  d.forEach(o=>{o.Ya=o.Y-b[2]*(o.G-mG)-(M1.addU?b[3]*(o.U-mU):0);});
+  const nb=M1.nb,bw=10/nb;const bins=[...Array(nb).keys()].map(k=>{const lo=k*bw,hi=lo+bw;const ib=d.filter(o=>o.G>=lo&&(o.G<hi||k===nb-1));const t=ib.filter(o=>o.M),c=ib.filter(o=>!o.M);return{lo,hi,nt:t.length,nc:c.length,mt:mean(t.map(o=>o.Y)),mc:mean(c.map(o=>o.Y))};});
+  let ws=0,est1=0;bins.forEach(q=>{if(q.nt&&q.nc){est1+=q.nt*(q.mt-q.mc);ws+=q.nt;}});est1=ws?est1/ws:NaN;
+  const st=M1.step,col=st!==1;
+  const F=frame(svg,{W,H,x:[0,10],y:[-150,850],noX:col,xl:st===1?"difficulté du conflit":null,yl:st===2?"civils tués, effet de la difficulté retiré":"civils tués par an",zero:true});
+  const cx=o=>st===1?o.G:(o.M?7.1:2.9)+o.j*2.6;
+  syncPts(F.pts,d,o=>o.M?"t":"c",o=>[F.sx(cx(o)),F.sy(st===2?o.Ya:o.Y)]);
+  let est;
+  if(col){
+    colLabels(F,Co.length,Tr.length);
+    const key=st===2?"Ya":"Y",mT=mean(Tr.map(o=>o[key])),mC=mean(Co.map(o=>o[key]));est=mT-mC;
+    ln(F.over,F.sx(1.3),F.sy(mC),F.sx(4.5),F.sy(mC),"mean");ln(F.over,F.sx(5.5),F.sy(mT),F.sx(8.7),F.sy(mT),"mean");
+    const xg=F.sx(5);ln(F.over,F.sx(4.5),F.sy(mC),xg,F.sy(mC),"guide");ln(F.over,xg,F.sy(mT),F.sx(5.5),F.sy(mT),"guide");
+    varrow(F.over,xg,F.sy(mC),F.sy(mT),st===2?"eff":"ink",true);
+    const top=F.sy(Math.max(mT,mC));if(F.W>=520){tx(F.over,st===2?"écart à difficulté égale":"écart brut",xg,top-24,"lbl-b","middle");tx(F.over,frs(est),xg,top-9,st===2?"num-eff":"num","middle");}
+  }else{
+    est=est1;const names=nb===3?["conflits faciles","moyens","difficiles"]:null;
+    bins.forEach((q,k)=>{if(k)ln(F.under,F.sx(q.lo),F.yt,F.sx(q.lo),F.yb,"guide");
+      const xm=F.sx((q.lo+q.hi)/2);if(names)tx(F.over,names[k],xm,F.yt+12,"lbl-b","middle");
+      if(nb===3&&F.W>=520)tx(F.over,`${q.nt} avec · ${q.nc} sans`,xm,F.sy(-110),"lbl-m","middle");
+      const pad=bw*.08;if(q.nt){ln(F.over,F.sx(q.lo+pad),F.sy(q.mt),F.sx(q.hi-pad),F.sy(q.mt),"ln-t");}
+      if(q.nc){ln(F.over,F.sx(q.lo+pad),F.sy(q.mc),F.sx(q.hi-pad),F.sy(q.mc),"ln-c");}
+      if(q.nt&&q.nc&&nb===3){const xa=F.sx(q.hi-.45);varrow(F.over,xa,F.sy(q.mc),F.sy(q.mt),"eff",false);tx(F.over,frs(q.mt-q.mc),F.sx(q.hi-.6),Math.min(F.sy(q.mt),F.sy(q.mc))-8,"num-eff","end");}
+    });
+  }
+  const labels=["Comparaison brute",`À difficulté égale (${nb} groupes)`,"Difficulté retirée (régression)"];
+  $("#l1a").textContent=labels[st];
+  $("#n1a").textContent=st===1?"moyenne des écarts, pondérée par les missions":st===2?(M1.addU?"contrôles"+NB+": difficulté et volonté de paix":"contrôle"+NB+": difficulté"):"avec − sans mission";
+  setRO("r1a",frs(est));setRO("r1b",frs(att));setRO("r1c",frs(est-att),"ro1c",est-att,15);
+  $("#o1h").textContent=M1.h===0?"aucune":fr(M1.h*100)+NB+"%";$("#o1g").textContent=String(M1.nb);
+}
+function initM1(){genM1();
+  document.querySelectorAll("#p-m1 .seg button").forEach(b=>b.onclick=()=>{M1.step=+b.dataset.step;document.querySelectorAll("#p-m1 .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));rM1();});
+  $("#s1h").oninput=e=>{M1.h=+e.target.value;rM1();};
+  $("#s1g").oninput=e=>{M1.nb=+e.target.value;if(M1.step!==1){M1.step=1;document.querySelectorAll("#p-m1 .seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.step==="1"));}rM1();};
+  $("#k1u").onchange=e=>{M1.addU=e.target.checked;rM1();};
+  $("#b1n").onclick=()=>{M1.seed++;genM1();rM1();};
+}
+
+/* ===================== 2. Appariement ===================== */
+const M2={c:.5,seed:21,tau:-100,onlyG:false};
+function genM2(){const r=rng(M2.seed),d=[];
+  for(let i=0;i<24;i++){const G=clamp(7.4+gauss(r)*1.5,.3,9.9),D=clamp(12+gauss(r)*4,1,19.8);d.push({M:true,G,D,Y:40+5.5*G*G+1.2*D*D+gauss(r)*30+M2.tau});}
+  for(let i=0;i<80;i++){const G=10*Math.pow(r(),2.6),D=clamp(1+18*Math.pow(r(),2.6),.5,19.8);d.push({M:false,G,D,Y:40+5.5*G*G+1.2*D*D+gauss(r)*30});}
+  M2.d=d;M2.sG=sd(d.map(o=>o.G));M2.sD=sd(d.map(o=>o.D));}
+function rM2(){
+  const svg=$("#c2"),W=width(svg),H=Math.round(Math.max(300,W*.62)),d=M2.d,Tr=d.filter(o=>o.M),Co=d.filter(o=>!o.M);
+  const F=frame(svg,{W,H,x:[0,10],y:[0,20],xl:"difficulté de la guerre (avant)",yl:"durée de la guerre (années)",clearPts:true});
+  const dist=(a,b)=>Math.hypot((a.G-b.G)/M2.sG,M2.onlyG?0:(a.D-b.D)/M2.sD);
+  const pairs=[];Tr.forEach(t=>{let best=null,bd=1e9;Co.forEach(c=>{const q=dist(t,c);if(q<bd){bd=q;best=c;}});t.m=bd<=M2.c?best:null;if(t.m)pairs.push(t);});
+  const used=new Set(pairs.map(t=>t.m));
+  const kx=(F.sx(1)-F.sx(0))*M2.sG,ky=(F.sy(0)-F.sy(1))*M2.sD;
+  Tr.forEach(t=>M2.onlyG?null:S("ellipse",{cx:F.sx(t.G),cy:F.sy(t.D),rx:M2.c*kx,ry:M2.c*ky,class:"cal"},F.under));
+  pairs.forEach(t=>ln(F.under,F.sx(t.G),F.sy(t.D),F.sx(t.m.G),F.sy(t.m.D),"match"));
+  Co.forEach(c=>{const e=dotC(F.pts,F.sx(c.G),F.sy(c.D));if(!used.has(c))e.classList.add("dim");});
+  Tr.forEach(t=>{dotT(F.pts,F.sx(t.G),F.sy(t.D));if(!t.m){S("circle",{cx:F.sx(t.G),cy:F.sy(t.D),r:8.5,class:"ring-warn"},F.over);}});
+  const nd=Tr.length-pairs.length;
+  if(nd)tx(F.over,`${nd} pays sans jumeau, écartés`,F.xr-4,F.yt+12,"num-warn","end");
+  const naive=mean(Tr.map(o=>o.Y))-mean(Co.map(o=>o.Y));
+  const est=pairs.length?mean(pairs.map(t=>t.Y-t.m.Y)):NaN;
+  setRO("r2a",frs(naive));setRO("r2b",frs(est));$("#n2b").textContent=`${pairs.length} pays sur ${Tr.length} appariés`;
+  setRO("r2c",frs(M2.tau));setRO("r2d",frs(est-M2.tau),"ro2d",est-M2.tau,20);
+  $("#o2c").textContent=fr(M2.c,2);
+}
+function initM2(){genM2();$("#s2c").oninput=e=>{M2.c=+e.target.value;rM2();};$("#k2g").onchange=e=>{M2.onlyG=e.target.checked;rM2();};$("#b2n").onclick=()=>{M2.seed++;genM2();rM2();};}
+
+/* ===================== 3. Instrument ===================== */
+const M3={pi:6,delta:0,n:80,seed:31};
+function simM3(seed,pi,delta,n){const r=rng(seed),d=[];for(let i=0;i<n;i++){const Z=r()<.5,G=3+gauss(r)*1.5;const T=Math.max(0,10+4*G+pi*Z+gauss(r)*3);const Y=Math.max(0,200+30*G-5*T+delta*Z+gauss(r)*15);d.push({Z,T,Y});}
+  const z1=d.filter(o=>o.Z),z0=d.filter(o=>!o.Z);const T1=mean(z1.map(o=>o.T)),T0=mean(z0.map(o=>o.T)),Y1=mean(z1.map(o=>o.Y)),Y0=mean(z0.map(o=>o.Y));
+  const f=linfit(d.map(o=>o.T),d.map(o=>o.Y));return{d,T1,T0,Y1,Y0,iv:(Y1-Y0)/(T1-T0),naive:f?f.b:NaN,f};}
+function rM3(){
+  const svg=$("#c3"),W=width(svg),H=Math.round(Math.max(300,W*.6));
+  const R=simM3(M3.seed,M3.pi,M3.delta,M3.n);M3.R=R;
+  const xs=R.d.map(o=>o.T),ys=R.d.map(o=>o.Y);
+  const xd=[0,Math.max(...xs)*1.08],yd=[0,Math.max(...ys)*1.1];
+  const F=frame(svg,{W,H,x:xd,y:yd,xl:"Casques bleus (centaines)",yl:"civils tués par mois",clearPts:true});
+  R.d.forEach(o=>o.Z?dotT(F.pts,F.sx(o.T),F.sy(o.Y),3.8):dotC(F.pts,F.sx(o.T),F.sy(o.Y),6.6));
+  if(R.f)ln(F.under,F.sx(xd[0]),F.sy(R.f.a),F.sx(xd[1]),F.sy(R.f.a+R.f.b*xd[1]),"ln-warn");
+  const sl=R.iv,ic=R.Y0-sl*R.T0;
+  if(isFinite(sl)){const xa=clamp(R.T0-(R.T1-R.T0)*1.6,xd[0],xd[1]),xb=clamp(R.T1+(R.T1-R.T0)*1.6,xd[0],xd[1]);
+    S("line",{x1:F.sx(xa),y1:F.sy(ic+sl*xa),x2:F.sx(xb),y2:F.sy(ic+sl*xb),class:"arr-eff"},F.over);}
+  ln(F.over,F.sx(R.T0),F.sy(R.Y0),F.sx(R.T1),F.sy(R.Y0),"guide");ln(F.over,F.sx(R.T1),F.sy(R.Y0),F.sx(R.T1),F.sy(R.Y1),"guide");
+  dotC(F.over,F.sx(R.T0),F.sy(R.Y0),15,"mk-big-c");dotT(F.over,F.sx(R.T1),F.sy(R.Y1),8.5,"mk-big-t");
+  const lo=R.Y0>=R.Y1;tx(F.over,"moyenne sans",F.sx(R.T0),F.sy(R.Y0)+(lo?-14:26),"lbl-b","middle");
+  tx(F.over,"moyenne avec",F.sx(R.T1),F.sy(R.Y1)+(lo?26:-14),"lbl-b","middle");
+  const dT=(R.T1-R.T0)*100,dY=R.Y1-R.Y0;
+  setRO("r3a",frs(dT)+" soldats");setRO("r3b",frs(dY,1));setRO("r3c",frs(R.iv,1));setRO("r3d",frs(R.naive,1));
+  $("#o3p").textContent="+"+fr(M3.pi*100)+" soldats";$("#o3d").textContent=frs(M3.delta);$("#o3n").textContent=String(M3.n);
+  if(!$("#rep3").hidden)repM3();
+}
+function repM3(){
+  const iv=[],nv=[];for(let k=0;k<300;k++){const R=simM3(1000+k*7+M3.seed*131,M3.pi,M3.delta,M3.n);iv.push(R.iv);nv.push(R.naive);}
+  $("#rep3").hidden=false;
+  hist($("#c3h"),[{vals:nv,cls:"bar-w"},{vals:iv,cls:"bar-t"}],[-15,5],-5,"effet estimé pour 100 soldats","vrai effet −5");
+  const srt=[...iv].sort((a,b)=>a-b),q=p=>srt[Math.floor(p*(srt.length-1))];
+  const out=iv.filter(v=>v<-15||v>5).length;
+  $("#v3").innerHTML=`<b>Variable instrumentale&nbsp;:</b> 9 tirages sur 10 entre ${fr(q(.05),1)} et ${fr(q(.95),1)}${out?` (${out} hors du graphique)`:""}. <b>Comparaison simple&nbsp;:</b> en moyenne ${fr(mean(nv),1)}, loin de −5, quel que soit le nombre de conflits.`;
+}
+function initM3(){
+  $("#s3p").oninput=e=>{M3.pi=+e.target.value;rM3();};$("#s3d").oninput=e=>{M3.delta=+e.target.value;rM3();};$("#s3n").oninput=e=>{M3.n=+e.target.value;rM3();};
+  $("#b3n").onclick=()=>{M3.seed++;rM3();};$("#b3r").onclick=()=>repM3();
+}
+
+/* ===================== 4. Discontinuité ===================== */
+const M4={h:.5,curv:0,manip:false,seed:41,tau:15};
+function genM4(){const r=rng(M4.seed);M4.d=[];for(let i=0;i<600;i++)M4.d.push({s:1+4*r(),U:gauss(r),e:gauss(r)*6,v:r()});}
+function rM4(){
+  const svg=$("#c4"),W=width(svg),H=Math.round(Math.max(280,W*.55)),c=2.5;
+  M4.d.forEach(o=>{o.cheat=M4.manip&&o.s>=1.9&&o.s<c&&o.U>.2;o.r=o.cheat?c+.02+o.v*.28:o.s;o.D=o.r<c;
+    o.Y=clamp(18+7*(5-o.s)+M4.curv*7*(o.s-c)**3-6*o.U+o.e+(o.D?M4.tau:0),0,100);});
+  const F=frame(svg,{W,H,x:[1,5],y:[0,100],xl:"note de sécurité du hameau (avant arrondi)",yl:"guérilla active (%)",clearPts:true});
+  S("rect",{x:F.sx(c-M4.h),y:F.yt,width:F.sx(c+M4.h)-F.sx(c-M4.h),height:F.yb-F.yt,class:"band"},F.under);
+  M4.d.forEach(o=>{const inb=Math.abs(o.r-c)<=M4.h;const e=o.D?dotT(F.pts,F.sx(o.r),F.sy(o.Y),2.6):dotC(F.pts,F.sx(o.r),F.sy(o.Y),4.4);if(!inb)e.classList.add("dim");});
+  ln(F.over,F.sx(c),F.yt,F.sx(c),F.yb,"cut");tx(F.over,"seuil 2,5",F.sx(c)+5,F.yt+12,"lbl-b");
+  const L=M4.d.filter(o=>o.r<c&&o.r>=c-M4.h),Rr=M4.d.filter(o=>o.r>=c&&o.r<=c+M4.h);
+  const fl=linfit(L.map(o=>o.r-c),L.map(o=>o.Y)),fr_=linfit(Rr.map(o=>o.r-c),Rr.map(o=>o.Y));
+  let est=NaN;
+  if(fl&&fr_){est=fl.a-fr_.a;
+    S("line",{x1:F.sx(c-M4.h),y1:F.sy(fl.a-fl.b*M4.h),x2:F.sx(c),y2:F.sy(fl.a),class:"ln-t"},F.over);
+    S("line",{x1:F.sx(c),y1:F.sy(fr_.a),x2:F.sx(c+M4.h),y2:F.sy(fr_.a+fr_.b*M4.h),class:"ln-c"},F.over);
+    varrow(F.over,F.sx(c)+1,F.sy(fr_.a),F.sy(fl.a),"eff",false);
+    tx(F.over,"saut "+frs(est,1),F.sx(c)+8,(F.sy(fl.a)+F.sy(fr_.a))/2+4,"num-eff");}
+  setRO("r4a",frs(est,1));setRO("r4c",frs(est-M4.tau,1),"ro4c",est-M4.tau,3);setRO("r4d",String(L.length+Rr.length));
+  $("#o4h").textContent="±"+fr(M4.h,2);$("#o4c").textContent=M4.curv===0?"aucune":fr(M4.curv*100)+NB+"%";
+  // histogram of scores
+  const hs=$("#c4h"),Hh=96,nb=40,cnt=Array(nb).fill(0);M4.d.forEach(o=>{const i=Math.min(nb-1,Math.floor((o.r-1)/.1));cnt[i]++;});
+  const G=frame(hs,{W,H:Hh,x:[1,5],y:[0,Math.max(...cnt)*1.15],noY:true,m:{t:18,b:22}});
+  cnt.forEach((n,i)=>{const lo=1+i*.1,inb=lo+.05>=c-M4.h&&lo+.05<=c+M4.h;S("rect",{x:G.sx(lo)+.5,y:G.sy(n),width:G.sx(1.1)-G.sx(1)-1,height:G.yb-G.sy(n),class:inb?"bar-on":"bar"},G.under);});
+  ln(G.over,G.sx(c),G.yt-6,G.sx(c),G.yb,"cut");tx(G.over,"nombre de hameaux par note",G.xl,12,"lbl-m");
+}
+function initM4(){genM4();
+  $("#s4h").oninput=e=>{M4.h=+e.target.value;rM4();};$("#s4c").oninput=e=>{M4.curv=+e.target.value;rM4();};
+  $("#k4m").onchange=e=>{M4.manip=e.target.checked;rM4();};$("#b4n").onclick=()=>{M4.seed++;genM4();rM4();};}
+
+/* ===================== 5. Double différence ===================== */
+const M5={tau:12.5,dl:0,dep:0,plac:false,seed:51};
+function genM5(){const r=rng(M5.seed);M5.nT=[];M5.nC=[];for(let t=0;t<8;t++){M5.nT.push(gauss(r)*.5);M5.nC.push(gauss(r)*.5);}}
+function rM5(){
+  const svg=$("#c5"),W=width(svg),H=Math.round(Math.max(290,W*.58)),P=[1,2,3,4,5,6,7,8];
+  const C=P.map((t,i)=>42+1.2*t+M5.nC[i]-(t>=5?M5.dep:0)),Tr=P.map((t,i)=>30+(1.2+M5.dl)*t+M5.nT[i]+(t>=5?M5.tau:0));
+  const cut=M5.plac?2.5:4.5,pre=P.map(t=>t<cut),post=P.map(t=>t>cut&&(!M5.plac||t<=4));
+  const mm=(a,mask)=>mean(a.filter((_,i)=>mask[i]));
+  const d1=mm(Tr,post)-mm(Tr,pre),d2=mm(C,post)-mm(C,pre),did=d1-d2,truth=M5.plac?0:M5.tau;
+  const cf=P.map((t,i)=>mm(Tr,pre)+(C[i]-mm(C,pre)));
+  const all=[...C,...Tr,...cf],y0=Math.floor(Math.min(...all)/5)*5-5,y1=Math.ceil(Math.max(...all)/5)*5+5;
+  const F=frame(svg,{W,H,x:[.5,9.2],y:[y0,y1],xt:P,xl:"période (vague d'enquête)",yl:"se sentir en sécurité (%)",clearPts:true,m:{r:20}});
+  S("rect",{x:F.sx(cut),y:F.yt,width:F.sx(M5.plac?4.5:8.5)-F.sx(cut),height:F.yb-F.yt,class:M5.plac?"band-p":"band"},F.under);
+  ln(F.over,F.sx(cut),F.yt,F.sx(cut),F.yb,"cut");tx(F.over,M5.plac?"fausse arrivée":"arrivée de la mission",F.sx(cut)+5,F.yt+12,"lbl-b");
+  if(M5.plac){ln(F.over,F.sx(4.5),F.yt,F.sx(4.5),F.yb,"guide");tx(F.over,"données ignorées",F.sx(4.6),F.yt+28,"lbl-m");}
+  const cfIdx=P.map((t,i)=>i).filter(i=>M5.plac?P[i]<=4:true);
+  path(F.under,cfIdx.map(i=>[F.sx(P[i]),F.sy(cf[i])]),"ln-cf");
+  path(F.under,P.map((t,i)=>[F.sx(t),F.sy(C[i])]),"ln-c");
+  path(F.under,P.map((t,i)=>[F.sx(t),F.sy(Tr[i])]),"ln-t");
+  cfIdx.forEach(i=>{if(P[i]>cut)S("circle",{cx:F.sx(P[i]),cy:F.sy(cf[i]),r:4.6,class:"mk-cf"},F.pts);});
+  P.forEach((t,i)=>{dotC(F.pts,F.sx(t),F.sy(C[i]),8);dotT(F.pts,F.sx(t),F.sy(Tr[i]),4.8);});
+  const lastI=M5.plac?3:7,xe=F.sx(P[lastI]+.45);
+  const mT=mm(Tr,post),mCF=mean(cfIdx.filter(i=>post[i]).map(i=>cf[i]));
+  ln(F.over,F.sx(cut+.15),F.sy(mCF),xe,F.sy(mCF),"guide");ln(F.over,F.sx(cut+.15),F.sy(mT),xe,F.sy(mT),"guide");
+  varrow(F.over,xe,F.sy(mCF),F.sy(mT),"eff",false);
+  tx(F.over,frs(did,1),xe-6,Math.min(F.sy(mT),F.sy(mCF))-8,"num-eff","end");
+  tx(F.over,"avec mission",F.sx(1)-2,F.sy(Tr[0])+(Tr[0]<C[0]?20:-12),"num-t");
+  setRO("r5a",frs(d1,1));setRO("r5b",frs(d2,1));setRO("r5c",frs(did,1));setRO("r5d",frs(truth,1));
+  $("#l5c").textContent=M5.plac?"Placebo":"Double différence";$("#n5d").textContent=M5.plac?"aucune mission avant la période 5":"connu car simulé";
+  $("#o5t").textContent=frs(M5.tau,1);$("#o5d").textContent=frs(M5.dl,1);$("#o5v").textContent=fr(M5.dep,1);
+}
+function initM5(){genM5();
+  $("#s5t").oninput=e=>{M5.tau=+e.target.value;rM5();};$("#s5d").oninput=e=>{M5.dl=+e.target.value;rM5();};$("#s5v").oninput=e=>{M5.dep=+e.target.value;rM5();};
+  $("#k5p").onchange=e=>{M5.plac=e.target.checked;rM5();};$("#b5n").onclick=()=>{M5.seed++;genM5();rM5();};}
+
+/* ===================== 6. Contrôle synthétique ===================== */
+const M6={tau:-8,other:false,seed:61,w:[1,1,1,1,1,1,1],years:25,t0:12};
+const NAMES6=["Pays A","Pays B","Pays C","Pays D","Pays E","Pays F","Pays G"];
+function projSimplex(v){const u=[...v].sort((a,b)=>b-a);let cs=0,th=0;for(let i=0;i<u.length;i++){cs+=u[i];const t=(cs-1)/(i+1);if(u[i]-t>0)th=t;}return v.map(x=>Math.max(0,x-th));}
+function synthOpt(X,y){const k=X[0].length;let v=Array(k).fill(1),lam=1;
+  for(let it=0;it<60;it++){const Xv=X.map(r=>dot(r,v)),g=Array(k).fill(0);X.forEach((r,i)=>r.forEach((x,j)=>g[j]+=x*Xv[i]));lam=Math.hypot(...g);v=g.map(x=>x/lam);}
+  const step=1/lam;let w=Array(k).fill(1/k),z=[...w],tk=1;
+  for(let it=0;it<6000;it++){const res=X.map((r,i)=>dot(r,z)-y[i]),g=Array(k).fill(0);X.forEach((r,i)=>r.forEach((x,j)=>g[j]+=x*res[i]));
+    const wn=projSimplex(z.map((x,j)=>x-step*g[j])),tn=(1+Math.sqrt(1+4*tk*tk))/2;z=wn.map((x,j)=>x+((tk-1)/tn)*(x-w[j]));w=wn;tk=tn;}
+  return w;}
+function genM6(){const r=rng(M6.seed),Y=M6.years;M6.don=[];
+  for(let k=0;k<7;k++){const l0=88+r()*24,g=k===6?4.4:.5+2.4*r(),amp=1+4*r(),w=.35+.5*r(),ph=r()*6;M6.don.push(Array.from({length:Y},(_,t)=>l0+g*t+amp*Math.sin(w*t+ph)+gauss(r)*.7));}
+  const tw=[0,0,0,0,0,0,0];const a=Math.floor(r()*6);let b=Math.floor(r()*6);if(b===a)b=(a+2)%6;let c=(a+b+1)%6;if(c===a||c===b)c=(c+1)%6;if(c===a||c===b)c=(c+1)%6;
+  tw[a]=.48;tw[b]=.32;tw[c]=.2;M6.base=Array.from({length:Y},(_,t)=>M6.don.reduce((s,dn,k)=>s+tw[k]*dn[t],0)+gauss(r)*.5);
+  M6.w=[1,1,1,1,1,1,1];M6.pl=null;$("#pl6").hidden=true;buildW6();}
+function treated6(){return M6.base.map((v,t)=>t>=M6.t0?v+Math.min(1,(t-M6.t0+1)/3)*(M6.tau+(M6.other?-10:0)):v);}
+function buildW6(){const box=$("#w6");box.innerHTML="";NAMES6.forEach((n,k)=>{const d=document.createElement("div");d.className="ctl";
+  d.innerHTML=`<label for="w6_${k}">${n}</label><output id="ow6_${k}"></output><input type="range" id="w6_${k}" min="0" max="100" step="1" value="${Math.round(M6.w[k]*100/7)}">`;box.appendChild(d);
+  d.querySelector("input").oninput=e=>{M6.w[k]=+e.target.value;rM6();};});}
+function syncW6(){const s=M6.w.reduce((a,b)=>a+b,0);NAMES6.forEach((_,k)=>{$("#w6_"+k).value=Math.round(M6.w[k]/(s||1)*100);});}
+function rM6(){
+  const svg=$("#c6"),W=width(svg),H=Math.round(Math.max(290,W*.56)),Y=M6.years,t0=M6.t0,tr=treated6();
+  const s=M6.w.reduce((a,b)=>a+b,0)||1,wn=M6.w.map(x=>x/s);
+  const syn=Array.from({length:Y},(_,t)=>M6.don.reduce((a,dn,k)=>a+wn[k]*dn[t],0));
+  const all=[...tr,...syn,...M6.don.flat()],y0=Math.floor(Math.min(...all)/10)*10,y1=Math.ceil(Math.max(...all)/10)*10;
+  const yr=t=>1990+t;
+  const F=frame(svg,{W,H,x:[1990,2014],y:[y0,y1],xt:[1990,1995,2000,2005,2010],xf:String,xl:"année",yl:"PIB par habitant (indice)",clearPts:true});
+  M6.don.forEach(dn=>path(F.under,dn.map((v,t)=>[F.sx(yr(t)),F.sy(v)]),"ln-pool"));
+  S("rect",{x:F.sx(2001.5),y:F.yt,width:F.xr-F.sx(2001.5),height:F.yb-F.yt,class:"band"},F.under);
+  ln(F.over,F.sx(2001.5),F.yt,F.sx(2001.5),F.yb,"cut");tx(F.over,"arrivée de la mission",F.sx(2001.5)+5,F.yt+12,"lbl-b");
+  path(F.pts,syn.map((v,t)=>[F.sx(yr(t)),F.sy(v)]),"ln-c");path(F.pts,tr.map((v,t)=>[F.sx(yr(t)),F.sy(v)]),"ln-t");
+  for(let t=0;t<Y;t+=2){dotC(F.pts,F.sx(yr(t)),F.sy(syn[t]),7);dotT(F.pts,F.sx(yr(t)),F.sy(tr[t]),4);}
+  const gap=tr.map((v,t)=>v-syn[t]);
+  const pre=Math.sqrt(mean(gap.slice(0,t0).map(g=>g*g))),post=mean(gap.slice(Y-5));
+  const xe=F.sx(2014)-4;varrow(F.over,xe,F.sy(syn[Y-1]),F.sy(tr[Y-1]),"eff",false);
+  setRO("r6a",fr(pre,1));setRO("r6b",frs(post,1));setRO("r6c",frs(M6.tau,0)+(M6.other?" (et choc −10)":""));
+  const q=pre<1.5?"bon":pre<4?"moyen":"mauvais";$("#n6a").textContent=`écart moyen avant 2002${NB}; ajustement ${q}`;
+  $("#ro6a").classList.toggle("bias",q==="mauvais");$("#ro6a").classList.toggle("big",q==="mauvais");
+  NAMES6.forEach((_,k)=>{$("#ow6_"+k).textContent=fr(wn[k]*100)+NB+"%";});
+  $("#o6t").textContent=frs(M6.tau);
+  if(M6.pl)drawPl6();
+}
+function optM6(){const t0=M6.t0,X=Array.from({length:t0},(_,t)=>M6.don.map(dn=>dn[t]));const w=synthOpt(X,treated6().slice(0,t0));M6.w=w.map(x=>x*100);syncW6();rM6();}
+function runPl6(){
+  const t0=M6.t0,Y=M6.years,units=[{y:treated6(),pool:M6.don,me:true}];
+  M6.don.forEach((dn,j)=>units.push({y:dn,pool:M6.don.filter((_,k)=>k!==j),me:false}));
+  M6.pl=units.map(u=>{const X=Array.from({length:t0},(_,t)=>u.pool.map(p=>p[t]));const w=synthOpt(X,u.y.slice(0,t0));
+    const gap=u.y.map((v,t)=>v-u.pool.reduce((a,p,k)=>a+w[k]*p[t],0));
+    const pre=Math.sqrt(mean(gap.slice(0,t0).map(g=>g*g))),post=Math.sqrt(mean(gap.slice(t0).map(g=>g*g)));return{gap,ratio:post/Math.max(pre,.05),me:u.me,pre};});
+  $("#pl6").hidden=false;drawPl6();}
+function drawPl6(){
+  const svg=$("#c6b"),W=width(svg),H=Math.round(Math.max(220,W*.42)),P=M6.pl;
+  const lim=Math.max(6,...P.flatMap(p=>p.gap.map(Math.abs)))*1.1;
+  const F=frame(svg,{W,H,x:[1990,2014],y:[-lim,lim],xt:[1990,1995,2000,2005,2010],xf:String,xl:"année",yl:"écart au jumeau",zero:true,clearPts:true});
+  ln(F.over,F.sx(2001.5),F.yt,F.sx(2001.5),F.yb,"cut");
+  P.filter(p=>!p.me).forEach(p=>path(F.under,p.gap.map((g,t)=>[F.sx(1990+t),F.sy(g)]),"ln-pool"));
+  const me=P.find(p=>p.me);path(F.pts,me.gap.map((g,t)=>[F.sx(1990+t),F.sy(g)]),"ln-t");
+  const rank=[...P].sort((a,b)=>b.ratio-a.ratio).findIndex(p=>p.me)+1;
+  $("#v6").innerHTML=`On compare l'écart après la mission à l'écart avant, pour chaque pays. <b>Le pays traité se classe ${rank}${rank===1?"er":"e"} sur ${P.length}.</b> ${rank===1?"Aucun placebo ne fait mieux&nbsp;: si la mission n'avait aucun effet, le pays traité n'aurait qu'une chance sur 8 d'arriver en tête par hasard.":"Des pays sans mission font aussi bien ou mieux&nbsp;: on ne peut pas distinguer l'écart du hasard."}`;
+}
+function initM6(){genM6();
+  $("#b6o").onclick=()=>optM6();$("#b6e").onclick=()=>{M6.w=[1,1,1,1,1,1,1];syncW6();rM6();};
+  $("#b6p").onclick=()=>runPl6();$("#b6n").onclick=()=>{M6.seed++;genM6();rM6();};
+  $("#s6t").oninput=e=>{M6.tau=+e.target.value;if(M6.pl)runPl6();rM6();};
+  $("#k6o").onchange=e=>{M6.other=e.target.checked;if(M6.pl)runPl6();rM6();};}
+
+/* ===================== 7. Expérience ===================== */
+const M7={n:200,mode:"random",reveal:false,seed:71,tau:-2};
+function assign7(r,V,mode){const n=V.length,idx=V.map((_,i)=>i);
+  if(mode==="random"){for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}}
+  else{const sc=V.map(v=>v+gauss(r)*.5);idx.sort((a,b)=>sc[b]-sc[a]);}
+  const D=Array(n).fill(false);idx.slice(0,n/2).forEach(i=>D[i]=true);return D;}
+function sim7(seed,n,mode){const r=rng(seed),V=[],Y=[];for(let i=0;i<n;i++){const v=gauss(r);V.push(v);Y.push(10-2*v+gauss(r)*1.5);}
+  const D=assign7(r,V,mode);const Yo=Y.map((y,i)=>D[i]?y+M7.tau:y);
+  const est=mean(Yo.filter((_,i)=>D[i]))-mean(Yo.filter((_,i)=>!D[i]));
+  return{V,D,est,vT:mean(V.filter((_,i)=>D[i])),vC:mean(V.filter((_,i)=>!D[i]))};}
+function rM7(){
+  const svg=$("#c7"),W=width(svg),cols=20,rows=Math.ceil(M7.n/cols),cell=Math.floor((W-8)/cols),H=rows*cell+8;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.innerHTML="";svg._L=null;
+  const R=sim7(M7.seed,M7.n,M7.mode),x0=(W-cols*cell)/2;
+  R.V.forEach((v,i)=>{const cx=x0+(i%cols)*cell,cy=4+Math.floor(i/cols)*cell;
+    if(M7.reveal)S("rect",{x:cx+1,y:cy+1,width:cell-2,height:cell-2,class:"cell","fill-opacity":(clamp((v+2.2)/4.4,0,1)*.55+.04).toFixed(2)},svg);
+    const r=Math.max(2.5,cell*.24);R.D[i]?dotT(svg,cx+cell/2,cy+cell/2,r):dotC(svg,cx+cell/2,cy+cell/2,r*1.7);});
+  setRO("r7a",`${fr(R.vT,2)} / ${fr(R.vC,2)}`);setRO("r7b",frs(R.est,2));$("#o7n").textContent=String(M7.n);
+  $("#lg7").hidden=!M7.reveal;
+  if(!$("#rep7").hidden)rep7();
+}
+function rep7(){const e=[];for(let k=0;k<500;k++)e.push(sim7(5000+k*13+M7.seed*97,M7.n,M7.mode).est);
+  $("#rep7").hidden=false;hist($("#c7h"),[{vals:e,cls:"bar-t"}],[-6,2],M7.tau,"effet estimé (conflits locaux par an)","vrai effet −2");
+  const m=mean(e),srt=[...e].sort((a,b)=>a-b),q=p=>srt[Math.floor(p*(srt.length-1))];
+  $("#v7").innerHTML=`<b>${M7.mode==="random"?"Tirage au sort":"Choix par l'ONG"}, ${M7.n} villages&nbsp;:</b> en moyenne ${fr(m,2)} (vrai effet −2,00)&nbsp;; 9 tirages sur 10 entre ${fr(q(.05),2)} et ${fr(q(.95),2)}. ${M7.mode==="random"?"Chaque tirage se trompe un peu, mais sans biais.":"L'erreur ne vient pas du hasard&nbsp;: elle se répète à chaque fois."}`;}
+function initM7(){
+  document.querySelectorAll("#p-m7 .seg button").forEach(b=>b.onclick=()=>{M7.mode=b.dataset.mode;document.querySelectorAll("#p-m7 .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));rM7();});
+  $("#s7n").oninput=e=>{M7.n=+e.target.value;rM7();};
+  $("#b7v").onclick=e=>{M7.reveal=!M7.reveal;e.currentTarget.setAttribute("aria-pressed",M7.reveal);rM7();};
+  $("#b7n").onclick=()=>{M7.seed++;rM7();};$("#b7r").onclick=()=>rep7();}
+
+/* ===================== Quiz ===================== */
+const METH=["Variables de contrôle","Appariement","Variable instrumentale","Discontinuité","Double différence","Contrôle synthétique","Expérience aléatoire"];
+const QZ=[
+ {q:"Les sanctions occidentales de 2022 ont-elles freiné la croissance russe ?",a:5,f:"Un seul pays traité : une Russie « synthétique » faite d'autres économies (exportateurs de matières premières, pays voisins) qui suivait la vraie Russie avant 2022. Piège : la guerre elle-même (dépenses militaires) et la flambée des prix de l'énergie, la même année, seraient mêlées à l'effet des sanctions."},
+ {q:"Une ONG veut savoir si sa formation au dialogue réduit les conflits locaux. Elle peut intervenir dans 50 villages sur 100. Comment le vérifier ?",a:6,f:"Tirer au sort les 50 villages formés : les 50 autres forment un groupe témoin comparable, même sur ce que l'on ne mesure pas. Piège : ce qui marche dans ces villages vaut-il ailleurs ?"},
+ {q:"Une aide est versée aux communes de plus de 5 000 habitants. Réduit-elle le vote extrémiste ?",a:3,f:"Communes de 4 900 contre communes de 5 100 habitants : elles se ressemblent, seule l'aide change. Piège : d'autres règles peuvent changer au même seuil, et des communes peuvent gonfler leur population pour le franchir."},
+ {q:"En 2018, plusieurs régions frontalières reçoivent une base militaire, d'autres non. Le commerce local a-t-il changé ?",a:4,f:"On compare l'évolution du commerce dans les régions avec et sans base, avant et après 2018, en vérifiant que les tendances étaient parallèles avant. (Avec une seule région traitée, le contrôle synthétique serait aussi défendable.) Piège : les régions voisines peuvent être touchées elles aussi (commerce détourné)."},
+ {q:"L'aide internationale réduit-elle la pauvreté ? On sait que les pays qui siègent au Conseil de sécurité reçoivent plus d'aide pendant leur mandat.",a:2,f:"Le siège au Conseil sert de coup de pouce à l'aide : l'élection y suit en partie des tours de rôle régionaux (voir Kuziemko et Werker, 2006). Pièges : les pays qui briguent un siège diffèrent des autres ; le siège peut apporter autre chose que l'aide (prestige, accords commerciaux) : c'est un lien direct."}];
+function frTypo(s){return s.replace(/(\d) (\d{3})/g,"$1"+NB+"$2").replace(/ ([?:;!])/g,NB+"$1").replace(/« /g,"«"+NB).replace(/ »/g,NB+"»");}
+function initQuiz(){const box=$("#quiz"),got=new Set();
+  QZ.forEach((it,qi)=>{const d=document.createElement("div");d.className="qitem";
+    d.innerHTML=`<div class="qq">${qi+1}. ${frTypo(it.q)}</div><div class="qopts"></div><div class="qfb" aria-live="polite"></div>`;
+    const opts=d.querySelector(".qopts"),fb=d.querySelector(".qfb");
+    METH.forEach((m,k)=>{const b=document.createElement("button");b.textContent=m;b.onclick=()=>{
+      if(k===it.a){b.classList.add("ok");fb.innerHTML=`<b>Juste.</b> ${frTypo(it.f)}`;got.add(qi);$("#score").textContent=`Score${NB}: ${got.size} / ${QZ.length}`;}
+      else{b.classList.add("no");fb.innerHTML=`<b>Pas tout à fait.</b> Demandez-vous${NB}: à quoi pourrait-on comparer${NB}?`;}};opts.appendChild(b);});
+    box.appendChild(d);});}
+
+
+/* ===================== Diapositives ===================== */
+const WITH_SLIDES=false;
+const ALT={};
+const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+const CH=[
+ {id:"piege",name:"Le piège",s:[1,  2,  3,  4,  5,  6,  7,  8,  9,  10]},
+ {id:"m1",name:"Variables de contrôle",s:[11,  12,  13,  14,  15]},
+ {id:"m2",name:"Appariement",s:[19,  20]},
+ {id:"m3",name:"Variable instrumentale",s:[21,  22,  23,  24,  25]},
+ {id:"m4",name:"Discontinuité",s:[26,  27,  28]},
+ {id:"m5",name:"Double différence",s:[29,  30,  31,  32]},
+ {id:"m6",name:"Contrôle synthétique",s:[35,  36]},
+ {id:"m7",name:"Expérience aléatoire",s:[40,  41,  42]},
+ {id:"verdict",name:"Le verdict",s:[46,  49,  50,  54,  55,  66]},
+ {id:"quiz",name:"Testez-vous",s:[]},
+ {id:"ressources",name:"Ressources",s:[67,  68,  69]}];
+const RESERVE=new Set([]);
+const src=n=>`slides/s${String(n).padStart(2,"0")}.webp`;
+function buildDeck(el){
+  const ch=CH.find(c=>c.id===el.dataset.ch);if(!ch||!ch.s.length){el.remove();return;}
+  const hasLab=!!el.parentElement.querySelector(".lab");
+  el.innerHTML=`<div class="deckhead"><div class="h3">Le cours · ${ch.name}</div><div class="count" aria-live="polite"></div></div>
+  <div class="stage" tabindex="0" aria-label="Diapositives, flèches gauche et droite pour naviguer"><img alt=""><button class="hit prev" aria-label="Diapositive précédente"></button><button class="hit next" aria-label="Diapositive suivante"></button></div>
+  <div class="deckbar"><button class="btn bp">◀ Précédente</button><div class="strip"></div><button class="btn primary bn">Suivante ▶</button><button class="btn bf">Plein écran</button></div>
+  <details class="transcript"><summary>Texte de la diapositive</summary><p></p></details>
+  ${hasLab?'<button class="btn tolab" hidden>Passer à la simulation ↓</button>':""}`;
+  const img=el.querySelector(".stage img"),strip=el.querySelector(".strip"),cnt=el.querySelector(".count"),tr=el.querySelector(".transcript p"),tolab=el.querySelector(".tolab");
+  ch.s.forEach((n,i)=>{const b=document.createElement("button");b.innerHTML=`<img alt="" loading="lazy" data-src="${src(n)}">`;b.setAttribute("aria-label","Diapositive "+(i+1));b.onclick=()=>go(i);strip.appendChild(b);});
+  let i=0;
+  function go(k){i=clamp(k,0,ch.s.length-1);const n=ch.s[i];img.src=src(n);img.alt=ALT[n]||"";tr.textContent=ALT[n]||"";
+    cnt.innerHTML=(RESERVE.has(n)?'<span class="reserve">réserve</span> · ':"")+`${i+1}${NB}/${NB}${ch.s.length}`;
+    strip.querySelectorAll("button").forEach((b,j)=>{b.setAttribute("aria-current",j===i);if(j===i)b.scrollIntoView({block:"nearest",inline:"nearest"});});
+    el.querySelector(".bp").disabled=i===0;el.querySelector(".bn").disabled=i===ch.s.length-1;
+    if(tolab)tolab.hidden=i!==ch.s.length-1;
+    if(i<ch.s.length-1){const pre=new Image();pre.src=src(ch.s[i+1]);}}
+  el._load=()=>{strip.querySelectorAll("img[data-src]").forEach(m=>{m.src=m.dataset.src;m.removeAttribute("data-src");});if(!img.getAttribute("src"))go(0);};
+  el.querySelector(".bp").onclick=()=>go(i-1);el.querySelector(".bn").onclick=()=>go(i+1);
+  el.querySelector(".hit.prev").onclick=()=>go(i-1);el.querySelector(".hit.next").onclick=()=>go(i+1);
+  el.querySelector(".stage").addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();go(i+1);}else if(e.key==="ArrowLeft"){e.preventDefault();go(i-1);}});
+  el.querySelector(".bf").onclick=()=>{const st=el.querySelector(".stage");try{const r=st.requestFullscreen?st.requestFullscreen():null;if(r&&r.catch)r.catch(()=>{});}catch(e){}st.focus();};
+  if(tolab)tolab.onclick=()=>{const lab=el.parentElement.querySelector(".lab");lab.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});};
+}
+if(WITH_SLIDES)document.querySelectorAll(".deck").forEach(buildDeck);else document.querySelectorAll(".deck").forEach(d=>d.remove());
+CH.splice(0,CH.length,...CH.filter(c=>document.getElementById("p-"+c.id)));
+document.querySelectorAll(".chapnav").forEach(nav=>{const id=nav.parentElement.id.slice(2),k=CH.findIndex(c=>c.id===id);
+  const mk=(c,cls,lbl)=>{const b=document.createElement("button");b.className=cls;b.innerHTML=`<small>${lbl}</small>${c.name}`;b.onclick=()=>{goTab(c.id);window.scrollTo({top:document.querySelector(".tabs").offsetTop,behavior:"auto"});};nav.appendChild(b);};
+  if(k>0)mk(CH[k-1],"pv","← Chapitre précédent");if(k<CH.length-1)mk(CH[k+1],"nx","Chapitre suivant →");});
+
+
+/* ===================== Prédisez d'abord ===================== */
+const PRED={
+ piege:{q:"Si le Conseil envoyait les missions au hasard, l'écart brut serait…",o:["encore plus grand","proche du vrai effet","toujours positif"],a:1,c:"mettez le curseur « le Conseil choisit selon la difficulté » à zéro."},
+ m1:{q:"En comparant des conflits de même difficulté, les pays avec mission ont…",o:["plus de morts que les autres","moins de morts que les autres","autant de morts"],a:1,c:"cliquez sur « Groupes de difficulté »."},
+ m2:{q:"Si l'on exige des jumeaux très ressemblants, quels pays perd-on ?",o:["surtout les conflits les plus durs","des pays pris au hasard","aucun"],a:0,c:"réduisez la distance tolérée et regardez les cercles orange."},
+ m3:{q:"Si le coup de pouce n'ajoute presque aucun soldat, l'estimation…",o:["reste précise","devient très instable","vaut toujours zéro"],a:1,c:"baissez la force du coup de pouce, puis « Répéter 300 fois »."},
+ m4:{q:"Si des hameaux trichent pour passer au-dessus du seuil, que montre l'histogramme des notes ?",o:["un tas juste au-dessus du seuil","un creux partout","rien de visible"],a:0,c:"cochez « Tricherie sur la note »."},
+ m5:{q:"Si les comtés avec mission s'amélioraient déjà plus vite avant son arrivée, la double différence…",o:["surestime l'effet","sous-estime l'effet","reste juste"],a:0,c:"mettez un écart de tendance positif."},
+ m6:{q:"Le jumeau colle parfaitement avant 2002, mais un autre choc frappe le pays en 2002. L'écart après 2002…",o:["mesure l'effet de la mission","mélange la mission et l'autre choc","est forcément nul"],a:1,c:"cochez « Un autre choc frappe le pays la même année »."},
+ m7:{q:"Si l'ONG choisit elle-même les villages les plus motivés, l'effet estimé de la formation sera…",o:["trop fort","juste","trop faible"],a:0,c:"cliquez sur « L'ONG choisit », puis « Répéter 500 fois »."}};
+document.querySelectorAll(".predict").forEach(box=>{const P=PRED[box.dataset.p];if(!P){box.remove();return;}
+  box.innerHTML=`<div class="h3">Prédisez d'abord</div><div class="pq">${frTypo(P.q)}</div><div class="popts"></div><div class="pfb" aria-live="polite"></div>`;
+  const o=box.querySelector(".popts"),fb=box.querySelector(".pfb");
+  P.o.forEach((t,k)=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{
+    if(k===P.a){b.classList.add("ok");fb.innerHTML=frTypo(`<b>Bonne intuition.</b> Vérifiez-le dans la simulation : ${P.c}`);}
+    else{b.classList.add("no");fb.innerHTML=frTypo(`<b>À vérifier.</b> Testez votre hypothèse dans la simulation : ${P.c}`);}};o.appendChild(b);});});
+
+/* ===================== Réinitialiser ===================== */
+const MODS={piege:[M0,genM0],m1:[M1,genM1],m2:[M2,genM2],m3:[M3,null],m4:[M4,genM4],m5:[M5,genM5],m6:[M6,genM6],m7:[M7,null]};
+const SNAP={};
+Object.entries(MODS).forEach(([id,[M]])=>{const sn={};for(const k in M){const v=M[k];if(["number","boolean","string"].includes(typeof v))sn[k]=v;}
+  const ins=[...document.querySelectorAll(`#p-${id} .lab input`)].map(i=>[i,i.type==="checkbox"?i.checked:i.value]);SNAP[id]={sn,ins};});
+document.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{const id=b.dataset.reset,[M,gen]=MODS[id],S=SNAP[id];
+  Object.assign(M,S.sn);S.ins.forEach(([i,v])=>{if(i.type==="checkbox")i.checked=v;else i.value=v;});
+  document.querySelectorAll(`#p-${id} .lab [aria-pressed]`).forEach(x=>{
+    if(x.dataset.step!==undefined)x.setAttribute("aria-pressed",+x.dataset.step===M.step);
+    else if(x.dataset.mode!==undefined)x.setAttribute("aria-pressed",x.dataset.mode===M.mode);
+    else x.setAttribute("aria-pressed","false");});
+  const g=$("#b0g");if(id==="piege"&&g)g.textContent="Révéler la difficulté";
+  ["#rep3","#rep7","#pl6"].forEach(q=>{const e=document.querySelector(`#p-${id} ${q}`);if(e)e.hidden=true;});
+  if(id==="m6")M6.pl=null;
+  if(gen)gen();R[id]();});
+
+/* ===================== Triangulation ===================== */
+const TRI={"brut": [-1.083, -1.275, -0.85], "m1_ok": [0.983, 0.867, 1.108], "m1_ko": [2.226, 1.94, 2.459], "m2_ok": [0.92, 0.52, 1.23], "m3_ok": [1.014, 0.529, 1.895], "m3_ko": [0.598, 0.201, 1.324], "m4_ok": [1.02, 0.66, 1.32], "m4_ko": [1.367, 1.08, 1.673], "m5_ok": [0.992, 0.928, 1.04], "m5_ko": [1.312, 1.248, 1.36], "m6_ok": [1.05, 0.75, 1.238], "m6_ko": [2.3, 2, 2.487], "m7_ok": [0.996, 0.689, 1.269], "m7_ko": [2.419, 2.181, 2.702], "m2_ko": [-0.08, -0.91, 0.78]};
+const TROWS=[["Comparaison brute","brut",null,"aucune hypothèse : la sélection joue à plein"],["1. Variables de contrôle","m1_ok","m1_ko","volonté de paix non mesurée"],["2. Appariement","m2_ok","m2_ko","durée de la guerre oubliée"],
+ ["3. Variable instrumentale","m3_ok","m3_ko","lien direct interdit"],["4. Discontinuité","m4_ok","m4_ko","tricherie sur la note"],["5. Double différence","m5_ok","m5_ko","tendances non parallèles"],
+ ["6. Contrôle synthétique","m6_ok","m6_ko","autre choc la même année"],["7. Expérience aléatoire","m7_ok","m7_ko","l'ONG choisit les villages"]];
+let TMODE="ok";
+function rTri(){const svg=$("#c8");if(!svg)return;const W=width(svg),rh=TMODE==="both"?54:46,H=TROWS.length*rh+64;
+  const F=frame(svg,{W,H,x:[-1.5,3],y:[0,TROWS.length],noY:true,xt:[-1,0,1,2,3],xf:v=>v===1?"1 (juste)":v===0?"0":fr(v),xl:"part du vrai effet retrouvée",m:{l:16,r:16,t:8,b:46},clearPts:true});
+  const yRow=i=>F.yt+i*rh;
+  ln(F.under,F.sx(1),F.yt,F.sx(1),F.yb,"ref1");ln(F.under,F.sx(0),F.yt,F.sx(0),F.yb,"ref0");
+  tx(F.over,"vrai effet",F.sx(1)+5,F.yb-6,"num-eff");tx(F.over,"aucun effet",F.sx(0)-5,F.yb-6,"lbl-m","end");
+  const cl=v=>clamp(v,-1.5,3);
+  TROWS.forEach(([name,ok,ko,why],i)=>{const y=yRow(i);if(i)ln(F.under,F.xl,y,F.xr,y,"grid");
+    tx(F.over,name,F.xl+2,y+15,"rowname");
+    const raw=ok==="brut";if((TMODE!=="ok"||raw)&&why)tx(F.over,(ko?"violée : ":"")+why,F.xr-2,y+15,ko?"rowko":"lbl-m","end");
+    let yy=y+30;
+    if((TMODE!=="ko"||!ko)&&TRI[ok]){const [m,a,b]=TRI[ok];ln(F.pts,F.sx(cl(a)),yy,F.sx(cl(b)),yy,raw?"ci-raw":"ci-ok");dotT(F.pts,F.sx(cl(m)),yy,5.5,raw?"mk-raw":"mk-t");if(TMODE==="both")yy+=12;}
+    if(TMODE!=="ok"&&ko&&TRI[ko]){const [m,a,b]=TRI[ko];ln(F.pts,F.sx(cl(a)),yy,F.sx(cl(b)),yy,"ci-ko");S("rect",{x:F.sx(cl(m))-5,y:yy-5,width:10,height:10,class:"mk-ko"},F.pts);}
+  });
+}
+document.querySelectorAll("#p-verdict .seg button").forEach(b=>b.onclick=()=>{TMODE=b.dataset.tri;document.querySelectorAll("#p-verdict .seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));rTri();});
+
+/* ===================== Projection ===================== */
+(()=>{const b=$("#projb");if(!b)return;let on=false;try{on=localStorage.getItem("cf-proj")==="1";}catch(e){}
+  const set=v=>{on=v;document.documentElement.classList.toggle("proj",on);b.setAttribute("aria-pressed",on);try{localStorage.setItem("cf-proj",on?"1":"0");}catch(e){}requestAnimationFrame(()=>R[cur]&&R[cur]());};
+  b.onclick=()=>set(!on);if(on)set(true);})();
+
+/* ===================== Tabs ===================== */
+const R0={piege:rM0,m1:rM1,m2:rM2,m3:rM3,m4:rM4,m5:rM5,m6:rM6,m7:rM7,verdict:()=>rTri(),quiz:()=>{},ressources:()=>{}};
+const R=Object.fromEntries(Object.entries(R0).filter(([k])=>document.getElementById("p-"+k)));
+let cur="piege";
+function show(id){if(!R[id])id="piege";cur=id;
+  document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===id));
+  document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p-"+id);
+  try{localStorage.setItem("sim-cf-tab",id);}catch(e){}
+  const dk=document.querySelector("#p-"+id+" .deck");if(dk&&dk._load)dk._load();
+  markSeen(id);
+  requestAnimationFrame(()=>R[id]());}
+function goTab(id){show(id);try{history.replaceState(null,"","#"+id);}catch(e){}}
+let SEEN=new Set();try{SEEN=new Set(JSON.parse(localStorage.getItem("sim-cf-seen")||"[]"));}catch(e){}
+function markSeen(id){SEEN.add(id);try{localStorage.setItem("sim-cf-seen",JSON.stringify([...SEEN]));}catch(e){}document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.classList.toggle("seen",SEEN.has(b.dataset.tab)&&b.dataset.tab!==id));}
+document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.onclick=()=>goTab(b.dataset.tab));
+initM0();initM1();initM2();initM3();initM4();initM5();initM6();initM7();initQuiz();
+let start="piege";try{start=localStorage.getItem("sim-cf-tab")||start;}catch(e){}
+const h=(location.hash||"").slice(1);if(R[h])start=h;
+show(start);
+let raf=0;new ResizeObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>R[cur]());}).observe(document.querySelector(".wrap"));
+</script>
+
+</body>
+</html>
