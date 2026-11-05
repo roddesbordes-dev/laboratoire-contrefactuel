@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Compagnon du cours « Comment savoir si une politique marche ? » : simulations manipulables des méthodes d'inférence causale, fil rouge Casques bleus.">
 <title>Laboratoire du contrefactuel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%230072B2%22/%3E%3Ccircle cx=%228%22 cy=%228%22 r=%223.2%22 fill=%22white%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -14,7 +15,7 @@
   --bg:#EEF2F5; --panel:#FFFFFF; --ink:#14202A; --muted:#566573; --line:#CFD8DF; --grid:#E3E9EE;
   --t:#0072B2; --t-soft:rgba(0,114,178,.14);
   --c:#C98A00; --c-soft:rgba(230,159,0,.28); --c-ink:#9A6700;
-  --eff:#009E73; --eff-ink:#007A59; --warn:#D55E00; --warn-soft:rgba(213,94,0,.12); --hid:#CC79A7; --hid-ink:#A3507E;
+  --eff:#009E73; --eff-ink:#007A59; --warn:#D55E00; --warn-soft:rgba(213,94,0,.12); --warn-ink:#B54A00; --on-accent:#fff; --hid:#CC79A7; --hid-ink:#A3507E;
   --disp:"Archivo","Arial Narrow",system-ui,sans-serif;
   --body:"Source Serif 4",Georgia,"Times New Roman",serif;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -22,11 +23,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F161C; --panel:#172129; --ink:#E4ECF2; --muted:#9BABB8; --line:#2B3945; --grid:#212E38;
   --t:#56B4E9; --t-soft:rgba(86,180,233,.16); --c:#E69F00; --c-soft:rgba(230,159,0,.25); --c-ink:#F2B83C;
-  --eff:#2BB98E; --eff-ink:#45CFA3; --warn:#EE7A35; --warn-soft:rgba(238,122,53,.14); --hid:#E08CBB; --hid-ink:#EBA3CB; color-scheme:dark}}
+  --eff:#2BB98E; --eff-ink:#45CFA3; --warn:#EE7A35; --warn-soft:rgba(238,122,53,.14); --warn-ink:#EE7A35; --on-accent:#0F161C; --hid:#E08CBB; --hid-ink:#EBA3CB; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F161C; --panel:#172129; --ink:#E4ECF2; --muted:#9BABB8; --line:#2B3945; --grid:#212E38;
   --t:#56B4E9; --t-soft:rgba(86,180,233,.16); --c:#E69F00; --c-soft:rgba(230,159,0,.25); --c-ink:#F2B83C;
-  --eff:#2BB98E; --eff-ink:#45CFA3; --warn:#EE7A35; --warn-soft:rgba(238,122,53,.14); --hid:#E08CBB; --hid-ink:#EBA3CB; color-scheme:dark}
+  --eff:#2BB98E; --eff-ink:#45CFA3; --warn:#EE7A35; --warn-soft:rgba(238,122,53,.14); --warn-ink:#EE7A35; --on-accent:#0F161C; --hid:#E08CBB; --hid-ink:#EBA3CB; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:17px/1.55 var(--body);margin:0}
@@ -67,7 +68,7 @@ button,input{font:inherit}
 dl.sheet{margin:0;display:grid;gap:12px}
 dl.sheet dt{font:600 11.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 dl.sheet dd{margin:2px 0 0}
-dl.sheet .trap dt{color:var(--warn)}
+dl.sheet .trap dt{color:var(--warn-ink)}
 .steps{margin:0;padding-left:1.3em;display:grid;gap:6px}
 .steps li::marker{font:600 .85em var(--mono);color:var(--t)}
 .h3{font:700 13px var(--disp);letter-spacing:.07em;text-transform:uppercase;font-stretch:90%}
@@ -89,13 +90,13 @@ svg.chart{width:100%;height:auto;display:block}
 .ctl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center}
 .ctl label{font-size:15px}
 .ctl output{font:500 13px var(--mono);color:var(--ink);text-align:right;min-width:6ch}
-.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--t)}
+.ctl input[type=range]{grid-column:1/-1;width:100%;min-height:24px;accent-color:var(--t)}
 .ctl .hint{grid-column:1/-1;font-size:13px;color:var(--muted)}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:7px 12px;cursor:pointer;font:600 13.5px var(--disp);letter-spacing:.02em}
 .btn:hover{border-color:var(--muted)}
 .btn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
-.btn.primary{background:var(--t);border-color:var(--t);color:#fff}
+.btn.primary{background:var(--t);border-color:var(--t);color:var(--on-accent)}
 .seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:4px;overflow:hidden;width:fit-content;max-width:100%}
 .seg button{border:0;border-right:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;cursor:pointer;font:600 13px var(--disp)}
 .seg button:last-child{border-right:0}
@@ -110,7 +111,7 @@ svg.chart{width:100%;height:auto;display:block}
 .ro .note{font-size:13px;color:var(--muted)}
 .ro.est{border-top-color:var(--t)}
 .ro.true{border-top-color:var(--eff)} .ro.true .k::before{content:"\2713\00a0"} .ro.true .v{color:var(--eff-ink)}
-.ro.bias{border-top-color:var(--warn)} .ro.bias .k::before{content:"\25B2\00a0"} .ro.bias.big .v{color:var(--warn)}
+.ro.bias{border-top-color:var(--warn)} .ro.bias .k::before{content:"\25B2\00a0"} .ro.bias.big .v{color:var(--warn-ink)}
 .ro.raw{border-top-style:dashed}
 .eqline{font:500 14px var(--mono);color:var(--muted);background:var(--bg);border-radius:4px;padding:8px 10px;overflow-x:auto}
 .verdict{font-size:15px;padding:8px 12px;border-radius:4px;background:var(--bg)}
@@ -128,7 +129,7 @@ svg.chart{width:100%;height:auto;display:block}
 .lbl-b{fill:var(--ink);font:700 12.5px var(--disp);letter-spacing:.03em}
 .num{fill:var(--ink);font:600 14px var(--mono)}
 .num-eff{fill:var(--eff-ink);font:700 14px var(--mono)}
-.num-warn{fill:var(--warn);font:700 13px var(--mono)}
+.num-warn{fill:var(--warn-ink);font:700 13px var(--mono)}
 .num-t{fill:var(--t);font:600 13px var(--mono)}
 .halo{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
 .mk-t{fill:var(--t);stroke:var(--panel);stroke-width:.8}
@@ -172,9 +173,9 @@ svg.chart{width:100%;height:auto;display:block}
 .qitem .qq{font-weight:600}
 .qopts{display:flex;flex-wrap:wrap;gap:6px}
 .qopts button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:6px 10px;cursor:pointer;font:600 13px var(--disp)}
-.qopts button.ok{background:var(--eff);border-color:var(--eff);color:#fff}
+.qopts button.ok{background:var(--eff-ink);border-color:var(--eff-ink);color:var(--on-accent)}
 .qopts button.ok::before{content:"\2713\00a0"}
-.qopts button.no{border-color:var(--warn);color:var(--warn);text-decoration:line-through}
+.qopts button.no{border-color:var(--warn);color:var(--warn-ink);text-decoration:line-through}
 .qfb{font-size:15px}
 .score{font:600 14px var(--mono)}
 
@@ -217,9 +218,9 @@ details.transcript p{margin-top:6px;max-width:90ch}
 .predict .pq{font-weight:600}
 .predict .popts{display:flex;flex-wrap:wrap;gap:6px}
 .predict .popts button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:6px 10px;cursor:pointer;font:600 13.5px var(--disp);text-align:left}
-.predict .popts button.ok{background:var(--eff);border-color:var(--eff);color:#fff}
+.predict .popts button.ok{background:var(--eff-ink);border-color:var(--eff-ink);color:var(--on-accent)}
 .predict .popts button.ok::before{content:"\2713\00a0"}
-.predict .popts button.no{border-color:var(--warn);color:var(--warn);text-decoration:line-through}
+.predict .popts button.no{border-color:var(--warn);color:var(--warn-ink);text-decoration:line-through}
 .predict .pfb{font-size:15px}
 /* triangulation */
 .tri-cap{font-size:13.5px;color:var(--muted)}
@@ -229,7 +230,7 @@ details.transcript p{margin-top:6px;max-width:90ch}
 .ref1{stroke:var(--eff);stroke-width:2}
 .ref0{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3}
 .rowname{fill:var(--ink);font:700 13px var(--disp)}
-.rowko{fill:var(--warn);font:12.5px var(--body)}
+.rowko{fill:var(--warn-ink);font:12.5px var(--body)}
 /* projection mode */
 .projbtn{justify-self:start}
 .mk-raw{fill:var(--ink);stroke:var(--panel);stroke-width:1}
@@ -254,6 +255,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
 <pattern id="hatch-w" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="6" class="hatch-ln"/></pattern>
 </defs></svg>
 
+<noscript><p style="padding:12px 20px;font-weight:600">Les simulations et les diapositives de ce site ont besoin de JavaScript.</p></noscript>
 <div class="wrap">
 <header class="hero">
   <div>
@@ -269,6 +271,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
   </div>
 </header>
 
+<main id="contenu">
 <nav class="tabs" role="tablist" aria-label="Méthodes">
   <button role="tab" data-tab="piege"><span class="n">0</span>Le problème</button>
   <button role="tab" data-tab="m1"><span class="n">1</span>Variables de contrôle</button>
@@ -324,7 +327,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       <div class="ro true"><div class="k">Effet réel</div><div class="v" id="r0b"></div><div class="note">connu car simulé</div></div>
       <div class="ro bias" id="ro0c"><div class="k">Biais de sélection</div><div class="v" id="r0c"></div><div class="note">écart brut − effet réel</div></div>
     </div>
-    <div class="eqline" id="eq0"></div>
+    <div class="eqline" id="eq0" aria-live="polite"></div>
   </div>
   <nav class="chapnav" aria-label="Chapitres"></nav>
 </section>
@@ -462,7 +465,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <div id="rep3" hidden>
       <div class="legend" style="margin-bottom:6px"><span><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" class="bar-t"/></svg>variable instrumentale</span><span><svg width="14" height="12"><rect x="1" y="1" width="12" height="10" class="bar-w"/></svg>comparaison simple</span></div>
       <svg class="chart" id="c3h" role="img" aria-label="Distribution des estimations sur 300 tirages"></svg>
-      <p class="verdict" id="v3"></p>
+      <p class="verdict" aria-live="polite" id="v3"></p>
     </div>
   </div>
   <nav class="chapnav" aria-label="Chapitres"></nav>
@@ -595,7 +598,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <div id="pl6" hidden>
       <div class="legend" style="margin-bottom:6px"><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-t"/></svg>écart du pays traité</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-pool" style="opacity:.9"/></svg>écarts placebos</span></div>
       <svg class="chart" id="c6b" role="img" aria-label="Écarts des placebos"></svg>
-      <p class="verdict" id="v6"></p>
+      <p class="verdict" aria-live="polite" id="v6"></p>
     </div>
   </div>
   <nav class="chapnav" aria-label="Chapitres"></nav>
@@ -643,7 +646,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     </div>
     <div id="rep7" hidden>
       <svg class="chart" id="c7h" role="img" aria-label="Distribution des estimations sur 500 tirages"></svg>
-      <p class="verdict" id="v7"></p>
+      <p class="verdict" aria-live="polite" id="v7"></p>
     </div>
   </div>
   <nav class="chapnav" aria-label="Chapitres"></nav>
@@ -703,6 +706,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
   <nav class="chapnav" aria-label="Chapitres"></nav>
 </section>
 
+</main>
 <footer>
   <p>Les simulations utilisent des données fictives&nbsp;; le chiffre d'ouverture et la régression du cours reposent sur des données réelles (UCDP 26.1, Geo-PKO 2.3). Les ordres de grandeur des simulations s'inspirent des études présentées en cours (Fortna, 2004&nbsp;; Gilligan et Sergenti, 2008&nbsp;; Carnegie et Mikulaschek, 2020&nbsp;; Dell et Querubin, 2018&nbsp;; Bove, Di Salvatore et Elia, 2022&nbsp;; Bove et Elia, 2018&nbsp;; Blair, Karim et Morse, 2019). Guide&nbsp;: Walter, Howard et Fortna (2021).</p>
   <p>Rodolphe Desbordes · SKEMA Centre for Global Risks (SCGR), SKEMA Business School.</p>
@@ -1224,7 +1228,7 @@ const R0={piege:rM0,m1:rM1,m2:rM2,m3:rM3,m4:rM4,m5:rM5,m6:rM6,m7:rM7,verdict:()=
 const R=Object.fromEntries(Object.entries(R0).filter(([k])=>document.getElementById("p-"+k)));
 let cur="piege";
 function show(id){if(!R[id])id="piege";cur=id;
-  document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===id));
+  document.querySelectorAll(".tabs button[data-tab]").forEach(b=>{b.setAttribute("aria-selected",b.dataset.tab===id);b.tabIndex=b.dataset.tab===id?0:-1;});
   document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p-"+id);
   try{localStorage.setItem("lab-cf-tab",id);}catch(e){}
   const dk=document.querySelector("#p-"+id+" .deck");if(dk&&dk._load)dk._load();
@@ -1234,6 +1238,10 @@ function goTab(id){show(id);try{history.replaceState(null,"","#"+id);}catch(e){}
 let SEEN=new Set();try{SEEN=new Set(JSON.parse(localStorage.getItem("lab-cf-seen")||"[]"));}catch(e){}
 function markSeen(id){SEEN.add(id);try{localStorage.setItem("lab-cf-seen",JSON.stringify([...SEEN]));}catch(e){}document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.classList.toggle("seen",SEEN.has(b.dataset.tab)&&b.dataset.tab!==id));}
 document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.onclick=()=>goTab(b.dataset.tab));
+const TABS=[...document.querySelectorAll(".tabs button[data-tab]")];
+TABS.forEach(b=>{const k=b.dataset.tab,p=document.getElementById("p-"+k);b.id="tab-"+k;if(p){b.setAttribute("aria-controls",p.id);p.setAttribute("aria-labelledby",b.id);}});
+/* Onglets au clavier : flèches, Début, Fin (motif ARIA « tabs ») */
+document.querySelector(".tabs").addEventListener("keydown",e=>{const i=TABS.indexOf(document.activeElement);if(i<0)return;const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:TABS.length-1}[e.key];if(j===undefined)return;e.preventDefault();const b=TABS[(j+TABS.length)%TABS.length];b.focus();goTab(b.dataset.tab);});
 initM0();initM1();initM2();initM3();initM4();initM5();initM6();initM7();initQuiz();
 let start="piege";try{start=localStorage.getItem("lab-cf-tab")||start;}catch(e){}
 const h=(location.hash||"").slice(1);if(R[h])start=h;
