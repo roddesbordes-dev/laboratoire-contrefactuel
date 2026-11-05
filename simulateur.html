@@ -488,7 +488,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       </ol>
     </div>
     <details class="defi"><summary>Défi</summary><p>Pourquoi les tricheurs biaisent-ils l'estimation, alors qu'ils ne sont qu'une poignée&nbsp;?</p><p><i>Piste&nbsp;:</i> ils ne sont pas pris au hasard. Les hameaux qui réussissent à tricher sont aussi ceux où la guérilla est faible&nbsp;; ils quittent le côté gauche et s'entassent juste à droite, là où pèse l'estimation.</p></details>
-    <p class="course">Dans le cours&nbsp;: Dell et Querubin (2018), Viêt Nam, notes arrondies (2,49 devient 2)&nbsp;; et, pour les Casques bleus, une discontinuité à manier avec prudence à la frontière Mali-Burkina Faso (Nomikos, 2025).</p>
+    <p class="course">Dans le cours&nbsp;: Dell et Querubin (2018), Viêt Nam, sous-notes arrondies (4,4999 devient 4)&nbsp;; et, pour les Casques bleus, une discontinuité à manier avec prudence à la frontière Mali-Burkina Faso (Nomikos, 2025).</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · 600 hameaux simulés</div>
@@ -531,7 +531,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       </ol>
     </div>
     <details class="defi"><summary>Défi</summary><p>Mettez un vrai effet nul et un écart de tendance positif. Que conclurait un observateur pressé&nbsp;? Que montre le test placebo&nbsp;?</p><p><i>Piste&nbsp;:</i> il conclurait à un effet positif de la mission. Le placebo trouve un «&nbsp;effet&nbsp;» avant même l'arrivée des Casques bleus&nbsp;: signal d'alerte.</p></details>
-    <p class="course">Dans le cours&nbsp;: Bove, Di Salvatore et Elia (2022), Soudan du Sud, se sentir en sécurité +12,5 points. Et Kocher (2014)&nbsp;: la violence baissait déjà avant l'arrivée des Casques bleus.</p>
+    <p class="course">Dans le cours&nbsp;: Bove, Di Salvatore et Elia (2022), Soudan du Sud, se sentir en sécurité +12,5 points. Et Kocher (2014)&nbsp;: la violence était déjà faible ou baissait déjà avant l'arrivée des Casques bleus.</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · moyennes de 46 comtés simulés</div>
@@ -1095,7 +1095,7 @@ const QZ=[
  {q:"Une ONG veut savoir si sa formation au dialogue réduit les conflits locaux. Elle peut intervenir dans 50 villages sur 100. Comment le vérifier ?",a:6,f:"Tirer au sort les 50 villages formés : les 50 autres forment un groupe témoin comparable, même sur ce que l'on ne mesure pas. Piège : ce qui marche dans ces villages vaut-il ailleurs ?"},
  {q:"Une aide est versée aux communes de plus de 5 000 habitants. Réduit-elle le vote extrémiste ?",a:3,f:"Communes de 4 900 contre communes de 5 100 habitants : elles se ressemblent, seule l'aide change. Piège : d'autres règles peuvent changer au même seuil, et des communes peuvent gonfler leur population pour le franchir."},
  {q:"En 2018, plusieurs régions frontalières reçoivent une base militaire, d'autres non. Le commerce local a-t-il changé ?",a:4,f:"On compare l'évolution du commerce dans les régions avec et sans base, avant et après 2018, en vérifiant que les tendances étaient parallèles avant. (Avec une seule région traitée, le contrôle synthétique serait aussi défendable.) Piège : les régions voisines peuvent être touchées elles aussi (commerce détourné)."},
- {q:"L'aide internationale réduit-elle la pauvreté ? On sait que les pays qui siègent au Conseil de sécurité reçoivent plus d'aide pendant leur mandat.",a:2,f:"Le siège au Conseil sert de coup de pouce à l'aide (Kuziemko et Werker, 2006) ; en Afrique, l'élection suit des tours de rôle entre sous-régions. Pièges : les pays qui briguent un siège diffèrent des autres ; le siège peut apporter autre chose que l'aide (prestige, accords commerciaux) : c'est un lien direct."}];
+ {q:"L'aide internationale réduit-elle la pauvreté ? On sait que les pays qui siègent au Conseil de sécurité reçoivent plus d'aide pendant leur mandat.",a:2,f:"Le siège au Conseil sert de coup de pouce à l'aide (Kuziemko et Werker, 2006) ; en Afrique, l'élection suit des tours de rôle entre sous-régions (Carnegie et Mikulaschek, 2020). Pièges : les pays qui briguent un siège diffèrent des autres ; le siège peut apporter autre chose que l'aide (prestige, accords commerciaux) : c'est un lien direct."}];
 function frTypo(s){return s.replace(/(\d) (\d{3})/g,"$1"+NB+"$2").replace(/ ([?:;!])/g,NB+"$1").replace(/« /g,"«"+NB).replace(/ »/g,NB+"»");}
 function initQuiz(){const box=$("#quiz"),got=new Set();
   QZ.forEach((it,qi)=>{const d=document.createElement("div");d.className="qitem";
