@@ -351,7 +351,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       </ol>
     </div>
     <details class="defi"><summary>Défi</summary><p>Avec trois groupes seulement, l'estimation reste biaisée même sans facteur caché. Pourquoi&nbsp;?</p><p><i>Piste&nbsp;:</i> à l'intérieur d'un groupe, les pays avec mission restent plus difficiles que les autres (en moyenne de trois quarts de point sur l'échelle de 0 à 10, soit une quarantaine de morts de plus). Trois groupes, c'est un contrôle grossier&nbsp;; la régression utilise la difficulté exacte. Même leçon que pour les variables non mesurées&nbsp;: une variable mal mesurée ne contrôle qu'en partie.</p></details>
-    <p class="course">Dans le cours&nbsp;: Fortna (2004), 39&nbsp;% contre 42&nbsp;% de rechutes en brut, puis un risque réduit de plus de 55&nbsp;% à caractéristiques égales&nbsp;; la critique de Kocher (2014).</p>
+    <p class="course">Dans le cours&nbsp;: Fortna (2004), 39&nbsp;% contre 42&nbsp;% de rechutes en brut, puis un risque réduit de plus de 55&nbsp;% à caractéristiques égales&nbsp;; la critique de Kocher (2014), qui vise Hultman et al.</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · 170 conflits simulés</div>
@@ -426,7 +426,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <h2><span class="k">Méthode 3</span>La variable instrumentale&nbsp;: le coup de pouce</h2>
     <div class="predict" data-p="m3"></div>
     <dl class="sheet">
-      <div><dt>Le contrefactuel</dt><dd>Les conflits <b>sans</b> coup de pouce. Ici, le coup de pouce est la rotation au Conseil de sécurité&nbsp;: les sièges africains tournent entre les sous-régions selon un ordre fixé d'avance, et quand la sous-région d'un pays en guerre siège, ce pays reçoit plus de Casques bleus.</dd></div>
+      <div><dt>Le contrefactuel</dt><dd>Les conflits <b>sans</b> coup de pouce. Ici, le coup de pouce est la rotation au Conseil de sécurité&nbsp;: un des trois sièges africains revient toujours à l'Afrique de l'Ouest, les deux autres tournent entre les autres sous-régions selon un ordre fixé d'avance, et quand la sous-région d'un pays en guerre siège, ce pays reçoit plus de Casques bleus.</dd></div>
       <div><dt>Les trois conditions</dt><dd>(1) Le coup de pouce équivaut à un tirage au sort&nbsp;: sans lien avec les facteurs cachés. (2) Il change vraiment le nombre de soldats. (3) Il n'agit sur les violences <b>que</b> par les soldats.</dd></div>
       <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un coup de pouce trop faible (estimation très instable), ou un lien direct interdit&nbsp;: siéger au Conseil apporte aussi des sanctions ou de l'aide.</dd></div>
     </dl>
@@ -1095,7 +1095,7 @@ const QZ=[
  {q:"Une ONG veut savoir si sa formation au dialogue réduit les conflits locaux. Elle peut intervenir dans 50 villages sur 100. Comment le vérifier ?",a:6,f:"Tirer au sort les 50 villages formés : les 50 autres forment un groupe témoin comparable, même sur ce que l'on ne mesure pas. Piège : ce qui marche dans ces villages vaut-il ailleurs ?"},
  {q:"Une aide est versée aux communes de plus de 5 000 habitants. Réduit-elle le vote extrémiste ?",a:3,f:"Communes de 4 900 contre communes de 5 100 habitants : elles se ressemblent, seule l'aide change. Piège : d'autres règles peuvent changer au même seuil, et des communes peuvent gonfler leur population pour le franchir."},
  {q:"En 2018, plusieurs régions frontalières reçoivent une base militaire, d'autres non. Le commerce local a-t-il changé ?",a:4,f:"On compare l'évolution du commerce dans les régions avec et sans base, avant et après 2018, en vérifiant que les tendances étaient parallèles avant. (Avec une seule région traitée, le contrôle synthétique serait aussi défendable.) Piège : les régions voisines peuvent être touchées elles aussi (commerce détourné)."},
- {q:"L'aide internationale réduit-elle la pauvreté ? On sait que les pays qui siègent au Conseil de sécurité reçoivent plus d'aide pendant leur mandat.",a:2,f:"Le siège au Conseil sert de coup de pouce à l'aide : l'élection y suit en partie des tours de rôle régionaux (voir Kuziemko et Werker, 2006). Pièges : les pays qui briguent un siège diffèrent des autres ; le siège peut apporter autre chose que l'aide (prestige, accords commerciaux) : c'est un lien direct."}];
+ {q:"L'aide internationale réduit-elle la pauvreté ? On sait que les pays qui siègent au Conseil de sécurité reçoivent plus d'aide pendant leur mandat.",a:2,f:"Le siège au Conseil sert de coup de pouce à l'aide (Kuziemko et Werker, 2006) ; en Afrique, l'élection suit des tours de rôle entre sous-régions. Pièges : les pays qui briguent un siège diffèrent des autres ; le siège peut apporter autre chose que l'aide (prestige, accords commerciaux) : c'est un lien direct."}];
 function frTypo(s){return s.replace(/(\d) (\d{3})/g,"$1"+NB+"$2").replace(/ ([?:;!])/g,NB+"$1").replace(/« /g,"«"+NB).replace(/ »/g,NB+"»");}
 function initQuiz(){const box=$("#quiz"),got=new Set();
   QZ.forEach((it,qi)=>{const d=document.createElement("div");d.className="qitem";
