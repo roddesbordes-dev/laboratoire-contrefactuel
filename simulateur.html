@@ -271,7 +271,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
 
 <main id="contenu">
 <nav class="tabs" role="tablist" aria-label="Méthodes">
-  <button role="tab" data-tab="piege"><span class="n">0</span>Le piège</button>
+  <button role="tab" data-tab="piege"><span class="n">0</span>Le problème</button>
   <button role="tab" data-tab="m1"><span class="n">1</span>Variables de contrôle</button>
   <button role="tab" data-tab="m2"><span class="n">2</span>Appariement</button>
   <button role="tab" data-tab="m3"><span class="n">3</span>Variable instrumentale</button>
@@ -304,7 +304,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       <div><dt>La décomposition</dt><dd>Écart brut = effet de la mission + biais de sélection. Le biais mesure à quel point les pays aidés étaient différents <i>avant</i> la mission.</dd></div>
     </dl>
     <details class="defi"><summary>Défi</summary><p>Trouvez un réglage où la mission sauve des vies mais où l'écart brut est quand même positif, puis un réglage où les deux ont le même signe. Qu'est-ce qui change entre les deux&nbsp;?</p><p><i>Piste&nbsp;:</i> tout se joue sur la sélection. Quand le Conseil choisit au hasard, l'écart brut retrouve le vrai effet (au bruit près).</p></details>
-    <p class="course">Dans le cours&nbsp;: diapositives «&nbsp;Un chiffre troublant&nbsp;», «&nbsp;Trois histoires&nbsp;» et «&nbsp;Le biais de sélection&nbsp;» (568 contre 267 civils tués).</p>
+    <p class="course">Dans le cours&nbsp;: diapositives «&nbsp;Un chiffre troublant&nbsp;» (568 contre 267 civils tués), «&nbsp;Trois histoires&nbsp;» et «&nbsp;Le biais de sélection&nbsp;».</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · 160 conflits simulés</div>
@@ -428,7 +428,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <dl class="sheet">
       <div><dt>Le contrefactuel</dt><dd>Les mêmes pays en guerre, aux mois <b>sans</b> coup de pouce. Ici, le coup de pouce est la rotation au Conseil de sécurité&nbsp;: un des trois sièges africains revient toujours à l'Afrique de l'Ouest, les deux autres tournent entre les autres sous-régions selon un ordre fixé d'avance, et quand la sous-région d'un pays en guerre siège, la mission déjà présente dans ce pays reçoit en moyenne plus de Casques bleus.</dd></div>
       <div><dt>Les trois conditions</dt><dd>(1) Le coup de pouce équivaut à un tirage au sort&nbsp;: sans lien avec les facteurs cachés. (2) Il change vraiment le nombre de soldats. (3) Il n'agit sur les violences <b>que</b> par les soldats.</dd></div>
-      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un coup de pouce trop faible (estimation très instable), ou un lien direct interdit&nbsp;: siéger au Conseil apporte aussi des sanctions ou de l'aide.</dd></div>
+      <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un coup de pouce trop faible (estimation très instable), ou un lien direct interdit&nbsp;: siéger au Conseil pourrait aussi apporter des sanctions ou de l'aide (les auteurs n'en trouvent pas).</dd></div>
     </dl>
     <div>
       <div class="h3">À essayer</div>
@@ -443,13 +443,13 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <p class="course">Dans le cours&nbsp;: Carnegie et Mikulaschek (2020), environ 600 Casques bleus de plus, 3 à 5 civils tués de moins par mois pour 100 soldats.</p>
   </div>
   <div class="lab">
-    <div class="labhead"><div class="h3">Simulation · conflits simulés</div>
+    <div class="labhead"><div class="h3">Simulation · mois de guerre simulés</div>
       <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.6" class="mk-t"/></svg>sous-région au Conseil</span><span><svg width="14" height="14"><rect x="3" y="3" width="8" height="8" class="mk-c"/></svg>pas au Conseil</span><span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" class="ln-warn"/></svg>comparaison simple</span></div></div>
     <div class="chartbox"><svg class="chart" id="c3" role="img" aria-label="Victimes civiles selon le nombre de Casques bleus"></svg></div>
     <div class="controls">
       <div class="ctl"><label for="s3p">Force du coup de pouce (soldats en plus)</label><output id="o3p"></output><input type="range" id="s3p" min="0.5" max="12" step="0.5" value="6"></div>
       <div class="ctl"><label for="s3d">Lien direct interdit (civils par mois)</label><output id="o3d"></output><input type="range" id="s3d" min="-30" max="30" step="2" value="0"><span class="hint">Effet du siège au Conseil qui ne passe pas par les soldats (sanctions, aide).</span></div>
-      <div class="ctl"><label for="s3n">Nombre de conflits</label><output id="o3n"></output><input type="range" id="s3n" min="20" max="300" step="10" value="80"></div>
+      <div class="ctl"><label for="s3n">Nombre de mois de guerre</label><output id="o3n"></output><input type="range" id="s3n" min="20" max="300" step="10" value="80"></div>
     </div>
     <div class="btns"><button class="btn" id="b3n">Nouveau tirage</button><button class="btn" data-reset="m3">Réinitialiser</button><button class="btn primary" id="b3r">Répéter 300 fois</button></div>
     <div class="readouts">
@@ -574,8 +574,8 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
         <li>Mettez le vrai effet à zéro et cochez «&nbsp;un autre choc la même année&nbsp;»&nbsp;: la méthode attribue le choc à la mission.</li>
       </ol>
     </div>
-    <details class="defi"><summary>Défi</summary><p>Mettez le vrai effet à −3. Le placebo permet-il encore de distinguer l'effet du hasard&nbsp;?</p><p><i>Piste&nbsp;:</i> souvent non. C'est la situation de Bove et Elia (2018)&nbsp;: dans sept pays sur onze, pas d'effet détectable, ce qui ne prouve pas qu'il n'y en a aucun.</p></details>
-    <p class="course">Dans le cours&nbsp;: Bove et Elia (2018), onze pays hôtes&nbsp;; Abadie et Gardeazabal (2003), le Pays basque (85&nbsp;% Catalogne, 15&nbsp;% Madrid).</p>
+    <details class="defi"><summary>Défi</summary><p>Mettez le vrai effet à −3. Le placebo permet-il encore de distinguer l'effet du hasard&nbsp;?</p><p><i>Piste&nbsp;:</i> souvent non. C'est la situation de Bove et Elia (2018), sur l'économie des pays hôtes&nbsp;: dans sept pays sur onze, pas d'effet détectable, ce qui ne prouve pas qu'il n'y en a aucun.</p></details>
+    <p class="course">Dans le cours&nbsp;: Bove et Elia (2018), onze pays hôtes&nbsp;; Abadie et Gardeazabal (2003), le Pays basque (PIB par habitant environ 10&nbsp;% sous son jumeau synthétique).</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · un pays traité, sept pays dans le réservoir</div>
@@ -609,7 +609,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <div class="predict" data-p="m7"></div>
     <dl class="sheet">
       <div><dt>Le contrefactuel</dt><dd>Le groupe témoin, tiré au sort. Le hasard équilibre les deux groupes <b>en moyenne</b>, sur tout, même sur ce qu'on ne voit pas.</dd></div>
-      <div><dt>L'hypothèse clé</dt><dd>Le tirage a bien eu lieu et a été respecté. Il reste du hasard d'un tirage à l'autre, qui diminue avec le nombre de villages.</dd></div>
+      <div><dt>L'hypothèse clé</dt><dd>Le tirage a bien eu lieu et a été respecté, et les villages témoins ne sont pas touchés par le traitement. Il reste du hasard d'un tirage à l'autre, qui diminue avec le nombre de villages.</dd></div>
       <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>La validité externe&nbsp;: ce qui marche dans trois comtés libériens marche-t-il au Mali&nbsp;?</dd></div>
     </dl>
     <div>
@@ -622,7 +622,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       </ol>
     </div>
     <details class="defi"><summary>Défi</summary><p>Pourquoi ne tire-t-on pas au sort les pays qui reçoivent une mission de l'ONU&nbsp;?</p><p><i>Piste&nbsp;:</i> l'aide doit aller d'abord aux besoins, c'est politiquement impossible, et il y a trop peu de missions. On tire au sort des programmes&nbsp;: patrouilles, formations, actions locales.</p></details>
-    <p class="course">Dans le cours&nbsp;: Blair, Karim et Morse (2019), patrouilles au Liberia (36 communautés tirées au sort, 38 témoins)&nbsp;; Nomikos (2022), Bamako.</p>
+    <p class="course">Dans le cours&nbsp;: Blair, Karim et Morse (2019), patrouilles au Liberia (36 communautés tirées au sort, 38 témoins).</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · villages simulés</div>
@@ -664,7 +664,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
         <li>D'où la force de la triangulation&nbsp;: pour que des méthodes aux faiblesses différentes concluent toutes dans le même sens <i>à tort</i>, il faudrait que chacune voie son hypothèse violée, et dans la même direction.</li>
       </ol>
     </div>
-    <p class="course">C'est l'argument de Walter, Howard et Fortna (2021)&nbsp;: des dizaines d'études, avec des méthodes différentes, trouvent le même signe. Revenez au premier onglet avec le Conseil qui choisit les pires conflits&nbsp;: l'écart brut de départ mesurait surtout la sélection. Sur les vraies données du cours (diapositive «&nbsp;Nos 568 contre 267, passés à la régression&nbsp;»), l'écart de +301 civils tués tombe à +32 à violence passée égale, sans qu'aucune estimation soit significative.</p>
+    <p class="course">C'est l'argument de Walter, Howard et Fortna (2021)&nbsp;: des dizaines d'études, avec des méthodes différentes, trouvent le même signe. Revenez au premier onglet avec le Conseil qui choisit les pires conflits&nbsp;: l'écart brut de départ mesurait surtout la sélection. Sur les vraies données du cours (diapositive «&nbsp;Nos 568 contre 267, passés à la régression&nbsp;»), l'écart de +301 civils tués tombe à +54 à violence passée égale (+32 si l'on tient aussi compte des combats passés), sans qu'aucune estimation soit significative.</p>
   </div>
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · toutes les méthodes</div>
@@ -701,7 +701,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
 
 </main>
 <footer>
-  <p>Les simulations utilisent des données fictives&nbsp;; le chiffre d'ouverture et la régression du cours reposent sur des données réelles (UCDP 26.1, Geo-PKO 2.3). Les ordres de grandeur des simulations s'inspirent des études présentées en cours (Fortna, 2004a&nbsp;; Gilligan et Sergenti, 2008&nbsp;; Carnegie et Mikulaschek, 2020&nbsp;; Dell et Querubin, 2018&nbsp;; Bove, Di Salvatore et Elia, 2022&nbsp;; Bove et Elia, 2018&nbsp;; Blair, Karim et Morse, 2019). Guide&nbsp;: Walter, Howard et Fortna (2021).</p>
+  <p>Les simulations utilisent des données fictives&nbsp;; le chiffre d'ouverture, la régression, les diapositives de contexte, les barres Mali–Burkina (Nomikos, 2025) et le cas du Mali reposent sur des données réelles (UCDP 26.1, Geo-PKO 2.3, données de l'ONU). Les ordres de grandeur des simulations s'inspirent des études présentées en cours (Fortna, 2004a&nbsp;; Gilligan et Sergenti, 2008&nbsp;; Carnegie et Mikulaschek, 2020&nbsp;; Dell et Querubin, 2018&nbsp;; Bove, Di Salvatore et Elia, 2022&nbsp;; Bove et Elia, 2018&nbsp;; Blattman, Hartman et Blair, 2014&nbsp;; Blair, Karim et Morse, 2019). Guide&nbsp;: Walter, Howard et Fortna (2021).</p>
   <p>Rodolphe Desbordes · SKEMA Centre for Global Risks (SCGR), SKEMA Business School.</p>
 </footer>
 </div>
@@ -918,7 +918,7 @@ function repM3(){
   hist($("#c3h"),[{vals:nv,cls:"bar-w"},{vals:iv,cls:"bar-t"}],[-15,5],-5,"effet estimé pour 100 soldats","vrai effet −5");
   const srt=[...iv].sort((a,b)=>a-b),q=p=>srt[Math.floor(p*(srt.length-1))];
   const out=iv.filter(v=>v<-15||v>5).length;
-  $("#v3").innerHTML=`<b>Variable instrumentale&nbsp;:</b> 9 tirages sur 10 entre ${fr(q(.05),1)} et ${fr(q(.95),1)}${out?` (${out} hors du graphique)`:""}. <b>Comparaison simple&nbsp;:</b> en moyenne ${fr(mean(nv),1)}, loin de −5, quel que soit le nombre de conflits.`;
+  $("#v3").innerHTML=`<b>Variable instrumentale&nbsp;:</b> 9 tirages sur 10 entre ${fr(q(.05),1)} et ${fr(q(.95),1)}${out?` (${out} hors du graphique)`:""}. <b>Comparaison simple&nbsp;:</b> en moyenne ${fr(mean(nv),1)}, loin de −5, quel que soit le nombre de mois de guerre.`;
 }
 function initM3(){
   $("#s3p").oninput=e=>{M3.pi=+e.target.value;rM3();};$("#s3d").oninput=e=>{M3.delta=+e.target.value;rM3();};$("#s3n").oninput=e=>{M3.n=+e.target.value;rM3();};
@@ -1112,17 +1112,17 @@ const WITH_SLIDES=false;
 const ALT={};
 const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
 const CH=[
- {id:"piege",name:"Le piège",s:[1,  2,  3,  4,  5,  6,  7,  8,  9,  10]},
- {id:"m1",name:"Variables de contrôle",s:[11,  12,  13,  14,  15]},
- {id:"m2",name:"Appariement",s:[19,  20]},
- {id:"m3",name:"Variable instrumentale",s:[21,  22,  23,  24,  25]},
- {id:"m4",name:"Discontinuité",s:[26,  27,  28]},
- {id:"m5",name:"Double différence",s:[29,  30,  31,  32]},
- {id:"m6",name:"Contrôle synthétique",s:[35,  36]},
- {id:"m7",name:"Expérience aléatoire",s:[40,  41,  42]},
- {id:"verdict",name:"Le verdict",s:[46,  49,  50,  54,  55,  66]},
+ {id:"piege",name:"Le problème",s:[1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12]},
+ {id:"m1",name:"Variables de contrôle",s:[13,  14,  15,  16,  17]},
+ {id:"m2",name:"Appariement",s:[21,  22]},
+ {id:"m3",name:"Variable instrumentale",s:[23,  24,  25,  26,  27]},
+ {id:"m4",name:"Discontinuité",s:[28,  29,  30]},
+ {id:"m5",name:"Double différence",s:[31,  32,  33,  34]},
+ {id:"m6",name:"Contrôle synthétique",s:[37,  38]},
+ {id:"m7",name:"Expérience aléatoire",s:[42,  43]},
+ {id:"verdict",name:"Le verdict",s:[47,  50,  54,  55,  56,  67,  68,  69]},
  {id:"quiz",name:"Testez-vous",s:[]},
- {id:"ressources",name:"Ressources",s:[67,  68,  69]}];
+ {id:"ressources",name:"Ressources",s:[70,  71,  72]}];
 const RESERVE=new Set([]);
 const src=n=>`slides/s${String(n).padStart(2,"0")}.webp`;
 function buildDeck(el){
