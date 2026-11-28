@@ -538,7 +538,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       <div class="legend"><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-t"/><circle cx="13" cy="6" r="4" class="mk-t"/></svg>comtés avec mission</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-c"/><rect x="9.5" y="2.5" width="7" height="7" class="mk-c"/></svg>sans mission</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-cf"/><circle cx="13" cy="6" r="4" class="mk-cf"/></svg>contrefactuel</span></div></div>
     <div class="chartbox"><svg class="chart" id="c5" role="img" aria-label="Sentiment de sécurité au fil des périodes"></svg></div>
     <div class="controls">
-      <div class="ctl"><label for="s5t">Vrai effet de la mission (points)</label><output id="o5t"></output><input type="range" id="s5t" min="-10" max="25" step="0.5" value="12.5"></div>
+      <div class="ctl"><label for="s5t">Vrai effet de la mission (points)</label><output id="o5t"></output><input type="range" id="s5t" min="-10" max="25" step="0.5" value="10"></div>
       <div class="ctl"><label for="s5d">Écart de tendance entre les deux groupes</label><output id="o5d"></output><input type="range" id="s5d" min="-2" max="2" step="0.1" value="0"><span class="hint">En points par période. Zéro&nbsp;: tendances parallèles.</span></div>
       <div class="ctl"><label for="s5v">Violence déplacée chez les voisins (points)</label><output id="o5v"></output><input type="range" id="s5v" min="0" max="10" step="0.5" value="0"></div>
       <label class="chk"><input type="checkbox" id="k5p"> Test placebo&nbsp;: fausse arrivée en période 3</label>
@@ -957,7 +957,7 @@ function initM4(){genM4();
   $("#k4m").onchange=e=>{M4.manip=e.target.checked;rM4();};$("#b4n").onclick=()=>{M4.seed++;genM4();rM4();};}
 
 /* ===================== 5. Double différence ===================== */
-const M5={tau:12.5,dl:0,dep:0,plac:false,seed:51};
+const M5={tau:10,dl:0,dep:0,plac:false,seed:51};
 function genM5(){const r=rng(M5.seed);M5.nT=[];M5.nC=[];for(let t=0;t<8;t++){M5.nT.push(gauss(r)*.5);M5.nC.push(gauss(r)*.5);}}
 function rM5(){
   const svg=$("#c5"),W=width(svg),H=Math.round(Math.max(290,W*.58)),P=[1,2,3,4,5,6,7,8];
@@ -1120,8 +1120,8 @@ const CH=[
  {id:"m5",name:"Double différence",s:[31,  32,  33,  34]},
  {id:"m6",name:"Contrôle synthétique",s:[37,  38]},
  {id:"m7",name:"Expérience aléatoire",s:[42,  43]},
- {id:"verdict",name:"Le verdict",s:[47,  50,  54,  55,  56,  67,  68,  69]},
- {id:"quiz",name:"Testez-vous",s:[]},
+ {id:"verdict",name:"Le verdict",s:[47,  50,  54,  55,  67,  68,  69]},
+ {id:"quiz",name:"Testez-vous",s:[56]},
  {id:"ressources",name:"Ressources",s:[70,  71,  72]}];
 const RESERVE=new Set([]);
 const src=n=>`slides/s${String(n).padStart(2,"0")}.webp`;
@@ -1190,7 +1190,7 @@ document.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{const id=b.d
   if(gen)gen();R[id]();});
 
 /* ===================== Triangulation ===================== */
-const TRI={"brut": [-1.083, -1.275, -0.85], "m1_ok": [0.983, 0.867, 1.108], "m1_ko": [2.226, 1.94, 2.459], "m2_ok": [0.92, 0.52, 1.23], "m3_ok": [1.014, 0.529, 1.895], "m3_ko": [0.598, 0.201, 1.324], "m4_ok": [1.02, 0.66, 1.32], "m4_ko": [1.367, 1.08, 1.673], "m5_ok": [0.992, 0.928, 1.04], "m5_ko": [1.312, 1.248, 1.36], "m6_ok": [1.05, 0.75, 1.238], "m6_ko": [2.3, 2, 2.487], "m7_ok": [0.996, 0.689, 1.269], "m7_ko": [2.419, 2.181, 2.702], "m2_ko": [-0.08, -0.91, 0.78]};
+const TRI={"brut": [-1.054, -1.297, -0.829], "m1_ok": [0.966, 0.837, 1.126], "m1_ko": [2.202, 1.916, 2.469], "m2_ok": [0.916, 0.461, 1.192], "m2_ko": [-0.148, -0.974, 0.626], "m3_ok": [0.979, 0.57, 1.664], "m3_ko": [0.569, 0.2, 1.059], "m4_ok": [1.041, 0.701, 1.342], "m4_ko": [1.368, 1.001, 1.636], "m5_ok": [1, 0.907, 1.093], "m5_ko": [1.4, 1.307, 1.493], "m6_ok": [1.026, 0.815, 1.148], "m6_ko": [2.276, 2.065, 2.398], "m7_ok": [0.99, 0.728, 1.279], "m7_ko": [2.415, 2.137, 2.64]};
 const TROWS=[["Comparaison brute","brut",null,"aucune hypothèse : la sélection joue à plein"],["1. Variables de contrôle","m1_ok","m1_ko","volonté de paix non mesurée"],["2. Appariement","m2_ok","m2_ko","durée de la guerre oubliée"],
  ["3. Variable instrumentale","m3_ok","m3_ko","lien direct interdit"],["4. Discontinuité","m4_ok","m4_ko","tricherie sur la note"],["5. Double différence","m5_ok","m5_ko","tendances non parallèles"],
  ["6. Contrôle synthétique","m6_ok","m6_ko","autre choc la même année"],["7. Expérience aléatoire","m7_ok","m7_ko","l'ONG choisit les villages"]];
