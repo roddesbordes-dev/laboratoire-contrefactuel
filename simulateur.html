@@ -426,7 +426,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
     <h2><span class="k">Méthode 3</span>La variable instrumentale&nbsp;: le coup de pouce</h2>
     <div class="predict" data-p="m3"></div>
     <dl class="sheet">
-      <div><dt>Le contrefactuel</dt><dd>Les conflits <b>sans</b> coup de pouce. Ici, le coup de pouce est la rotation au Conseil de sécurité&nbsp;: un des trois sièges africains revient toujours à l'Afrique de l'Ouest, les deux autres tournent entre les autres sous-régions selon un ordre fixé d'avance, et quand la sous-région d'un pays en guerre siège, ce pays reçoit plus de Casques bleus.</dd></div>
+      <div><dt>Le contrefactuel</dt><dd>Les mêmes pays en guerre, aux mois <b>sans</b> coup de pouce. Ici, le coup de pouce est la rotation au Conseil de sécurité&nbsp;: un des trois sièges africains revient toujours à l'Afrique de l'Ouest, les deux autres tournent entre les autres sous-régions selon un ordre fixé d'avance, et quand la sous-région d'un pays en guerre siège, la mission déjà présente dans ce pays reçoit en moyenne plus de Casques bleus.</dd></div>
       <div><dt>Les trois conditions</dt><dd>(1) Le coup de pouce équivaut à un tirage au sort&nbsp;: sans lien avec les facteurs cachés. (2) Il change vraiment le nombre de soldats. (3) Il n'agit sur les violences <b>que</b> par les soldats.</dd></div>
       <div class="trap"><dt>Ce qui pourrait tromper</dt><dd>Un coup de pouce trop faible (estimation très instable), ou un lien direct interdit&nbsp;: siéger au Conseil apporte aussi des sanctions ou de l'aide.</dd></div>
     </dl>
@@ -580,12 +580,12 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
   <div class="lab">
     <div class="labhead"><div class="h3">Simulation · un pays traité, sept pays dans le réservoir</div>
       <div class="legend"><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-t"/><circle cx="13" cy="6" r="4" class="mk-t"/></svg>pays traité</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-c"/><rect x="9.5" y="2.5" width="7" height="7" class="mk-c"/></svg>pays synthétique</span><span><svg width="26" height="12"><line x1="1" y1="6" x2="25" y2="6" class="ln-pool" style="opacity:.8"/></svg>réservoir</span></div></div>
-    <div class="chartbox"><svg class="chart" id="c6" role="img" aria-label="PIB par habitant du pays traité et de son jumeau synthétique"></svg></div>
+    <div class="chartbox"><svg class="chart" id="c6" role="img" aria-label="Morts liées au conflit (indice) du pays traité et de son jumeau synthétique"></svg></div>
     <div class="weights" id="w6"></div>
     <div class="btns"><button class="btn primary" id="b6o">Laisser l'algorithme choisir</button><button class="btn" id="b6e">Poids égaux</button><button class="btn" id="b6p">Lancer les placebos</button><button class="btn" id="b6n">Nouveau tirage</button><button class="btn" data-reset="m6">Réinitialiser</button></div>
     <div class="controls">
       <div class="ctl"><label for="s6t">Vrai effet de la mission (points d'indice)</label><output id="o6t"></output><input type="range" id="s6t" min="-15" max="15" step="1" value="-8"></div>
-      <label class="chk"><input type="checkbox" id="k6o"> Un autre choc frappe le pays la même année (−10)</label>
+      <label class="chk"><input type="checkbox" id="k6o"> Un autre choc frappe le pays la même année (−10, par exemple un cessez-le-feu)</label>
     </div>
     <div class="readouts">
       <div class="ro" id="ro6a"><div class="k">Ajustement avant</div><div class="v" id="r6a"></div><div class="note" id="n6a"></div></div>
@@ -1017,7 +1017,7 @@ function rM6(){
   const syn=Array.from({length:Y},(_,t)=>M6.don.reduce((a,dn,k)=>a+wn[k]*dn[t],0));
   const all=[...tr,...syn,...M6.don.flat()],y0=Math.floor(Math.min(...all)/10)*10,y1=Math.ceil(Math.max(...all)/10)*10;
   const yr=t=>1990+t;
-  const F=frame(svg,{W,H,x:[1990,2014],y:[y0,y1],xt:[1990,1995,2000,2005,2010],xf:String,xl:"année",yl:"PIB par habitant (indice)",clearPts:true});
+  const F=frame(svg,{W,H,x:[1990,2014],y:[y0,y1],xt:[1990,1995,2000,2005,2010],xf:String,xl:"année",yl:"morts liées au conflit (indice)",clearPts:true});
   M6.don.forEach(dn=>path(F.under,dn.map((v,t)=>[F.sx(yr(t)),F.sy(v)]),"ln-pool"));
   S("rect",{x:F.sx(2001.5),y:F.yt,width:F.xr-F.sx(2001.5),height:F.yb-F.yt,class:"band"},F.under);
   ln(F.over,F.sx(2001.5),F.yt,F.sx(2001.5),F.yb,"cut");tx(F.over,"arrivée de la mission",F.sx(2001.5)+5,F.yt+12,"lbl-b");
