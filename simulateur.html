@@ -655,12 +655,12 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
   <div class="deck" data-ch="verdict"></div>
   <div class="text">
     <h2><span class="k">Synthèse</span>La triangulation</h2>
-    <p>Le graphique rassemble toutes les simulations du site. Pour chaque méthode, on a refait l'estimation 100 fois et l'on mesure la <b>part du vrai effet retrouvée</b>&nbsp;: 1 si l'estimation tombe juste, 0 si elle ne trouve rien, un nombre négatif si elle se trompe de signe.</p>
+    <p>Le graphique rassemble toutes les simulations du site. Pour chaque méthode, on a refait l'estimation 100 fois (40 pour le contrôle synthétique) et l'on mesure la <b>part du vrai effet retrouvée</b>&nbsp;: 1 si l'estimation tombe juste, 0 si elle ne trouve rien, un nombre négatif si elle se trompe de signe.</p>
     <div>
       <div class="h3">À lire</div>
       <ol class="steps">
         <li><b>Hypothèse respectée</b>&nbsp;: toutes les méthodes tombent près de 1, sauf la comparaison brute, qui se trompe de signe. Leur précision diffère beaucoup&nbsp;: la double différence est serrée, la variable instrumentale très large.</li>
-        <li><b>Hypothèse violée</b>&nbsp;: chaque méthode se trompe, mais chacune à sa façon et pour sa propre raison. L'instrument et l'appariement incomplet sous-estiment, les autres surestiment, et pas du même montant.</li>
+        <li><b>Hypothèse violée</b>&nbsp;: chaque méthode se trompe, mais chacune à sa façon et pour sa propre raison. L'appariement sur la difficulté seule ne retrouve presque rien (mauvais signe plus d'une fois sur deux)&nbsp;; l'instrument sous-estime avec un lien direct de +12, il surestimerait avec −12&nbsp;; les autres surestiment, et pas du même montant.</li>
         <li>D'où la force de la triangulation&nbsp;: pour que des méthodes aux faiblesses différentes concluent toutes dans le même sens <i>à tort</i>, il faudrait que chacune voie son hypothèse violée, et dans la même direction.</li>
       </ol>
     </div>
@@ -675,7 +675,7 @@ footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;font-si
       <button data-tri="ko" aria-pressed="false">Hypothèse violée</button>
     </div>
     <div class="chartbox"><svg class="chart" id="c8" role="img" aria-label="Part du vrai effet retrouvée par chaque méthode"></svg></div>
-    <p class="tri-cap">Point&nbsp;: médiane sur 100 tirages (40 pour le contrôle synthétique). Trait&nbsp;: 9 tirages sur 10. Réglages par défaut de chaque onglet&nbsp;; l'hypothèse violée correspond au réglage indiqué en orange.</p>
+    <p class="tri-cap">Point&nbsp;: médiane sur 100 tirages (40 pour le contrôle synthétique). Trait&nbsp;: 9 tirages sur 10. Réglages par défaut de chaque onglet, sauf l'étape «&nbsp;Retirer l'effet de la difficulté&nbsp;» (méthode 1) et les poids de l'algorithme (méthode 6). Hypothèse violée&nbsp;: volonté de paix au maximum (1), apparier sur la difficulté seulement (2), lien direct de +12 (3), tricherie sur la note (4), écart de tendance de +1 (5), autre choc la même année (6), l'ONG choisit (7).</p>
   </div>
   <nav class="chapnav" aria-label="Chapitres"></nav>
 </section>
